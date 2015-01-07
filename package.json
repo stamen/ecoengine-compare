@@ -1,0 +1,30 @@
+{
+  "name": "richmond-boilerplate",
+  "version": "0.0.0",
+  "description": "A boilerplate for richmond apps",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/stamen/richmond-boilerplate.git"
+  },
+  "author": "evg@stamen.com",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/stamen/richmond-boilerplate/issues"
+  },
+  "homepage": "https://github.com/stamen/richmond-boilerplate",
+  "dependencies": {
+    "gulp-watch": "~3.0.0",
+    "gulp": "~3.8.10",
+    "gulp-rename": "~1.2.0",
+    "gulp-compile-handlebars": "~0.4.4",
+    "gulp-jshint": "~1.9.0",
+    "gulp-uglify": "~1.0.2",
+    "gulp-bower": "0.0.7",
+    "gulp-webserver": "~0.9.0",
+    "jshint-stylish": "~1.0.0"
+  }
+}
