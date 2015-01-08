@@ -1,13 +1,16 @@
-var gulp           = require('gulp'),
-    watch          = require('gulp-watch'),
-    rename         = require('gulp-rename'),
-    handlebars     = require("gulp-compile-handlebars"),
-    jshint         = require('gulp-jshint'),
-    uglify         = require('gulp-uglify'),
-    webserver      = require('gulp-webserver'),
-    bower          = require('gulp-bower');
+var gulp       = require('gulp'),
+    watch      = require('gulp-watch'),
+    rename     = require('gulp-rename'),
+    handlebars = require("gulp-compile-handlebars"),
+    jshint     = require('gulp-jshint'),
+    uglify     = require('gulp-uglify'),
+    webserver  = require('gulp-webserver'),
+    bower      = require('gulp-bower'),
+    run        = require('gulp-run');
 
 var paths = {
+  sass      : './sass',
+  css       : './public/css',
   templates : './templates/*.handlebars',
   js        : './js/*.js',
   publicJs  : './public/js'
@@ -57,8 +60,8 @@ gulp.task('templates', function() {
 gulp.task('webserver', function() {
   return gulp.src('./public/')
   .pipe(webserver({
-    open:true,
-    livereload: true,
+    open:false, //unless you want it
+    livereload: false, //unless you want it
     directoryListing: false,
     fallback: 'index.html'
   }));
@@ -69,11 +72,18 @@ gulp.task('bower', function() {
   .pipe(gulp.dest(paths.publicJs))
 });
 
+gulp.task('sass', function () {
+  new run.Command('sass --watch ./sass:./public/css', {
+    verbosity : 1
+  }).exec();  // Writes "Hello World\n" to output/echo.
+})
+
 gulp.task('default',function(){
   gulp.start('lint');
   gulp.start('uglify');
   gulp.start('bower');
   gulp.start('templates');
+  gulp.start('sass');
 });
 
 // Watch Files For Changes

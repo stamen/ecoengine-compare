@@ -29,4 +29,5 @@ node_modules
 
 bower_components
 
-public
+public/js
+public/*.html
