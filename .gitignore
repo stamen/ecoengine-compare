@@ -29,6 +29,8 @@ node_modules
 
 bower_components
 
+.sass-cache
+
 public/js
 public/css
 public/*.html
