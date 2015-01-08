@@ -43,9 +43,9 @@ gulp.task('lint', function() {
 gulp.task('uglify', function() {
   gulp.src(paths.js)
   .pipe(uglify({
-    mangle: false,
+    mangle: true,
     output: {
-      beautify: true
+      beautify: false
     }
   }))
   .pipe(gulp.dest(paths.js))
