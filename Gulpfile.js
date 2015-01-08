@@ -6,7 +6,8 @@ var gulp       = require('gulp'),
     uglify     = require('gulp-uglify'),
     webserver  = require('gulp-webserver'),
     bower      = require('gulp-bower'),
-    run        = require('gulp-run');
+    run        = require('gulp-run'),
+    fs         = require("fs");
 
 var paths = {
   sass      : './sass',
@@ -64,6 +65,13 @@ gulp.task('templates', function() {
     ignorePartials: true
   }
 
+  //
+  // Read helpers
+  //
+  fs.readdirSync("./helpers").forEach(function(file) {
+    options.helpers[file.split(".")[0]] = require("./helpers/" + file);
+  });
+
   return gulp.src(paths.templates)
   .pipe(handlebars(templateData, options))
   .pipe(rename({extname:'.html'}))
@@ -98,6 +106,8 @@ gulp.task('bower', function() {
 // Generate CSS from Sass and move it
 // to the public directory
 //
+// There was a
+//
 gulp.task('sass', function () {
   new run.Command('sass --watch ./sass:./public/css', {
     verbosity : 1
@@ -112,7 +122,6 @@ gulp.task('default',function(){
   gulp.start('uglify');
   gulp.start('bower');
   gulp.start('templates');
-  gulp.start('sass');
 });
 
 //
@@ -124,6 +133,9 @@ gulp.task('watch', function() {
 
   gulp.watch(paths.templates, ['templates']);
   console.log('watching directory:' + paths.templates);
+
+  gulp.watch(paths.sass, ['sass']);
+  console.log('watching directory:' + paths.sass);
 
   gulp.start('webserver');
 });
