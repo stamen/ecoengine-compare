@@ -1,1 +1,0 @@
-module.exports=function(t){return t.fn(this).split(t.hash.item).join(t.hash.with)};

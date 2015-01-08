@@ -1,9 +1,11 @@
 var gulp       = require('gulp'),
     watch      = require('gulp-watch'),
     rename     = require('gulp-rename'),
+    copy       = require('gulp-copy'),
     handlebars = require("gulp-compile-handlebars"),
     jshint     = require('gulp-jshint'),
     uglify     = require('gulp-uglify'),
+    sourcemaps = require('gulp-sourcemaps'),
     webserver  = require('gulp-webserver'),
     bower      = require('gulp-bower'),
     run        = require('gulp-run'),
@@ -41,15 +43,26 @@ gulp.task('lint', function() {
 // Minify JS and move it to the
 // public directory
 //
-gulp.task('uglify', function() {
+gulp.task('copyjs', function() {
+
   gulp.src(paths.js)
+  .pipe(copy("./public"))
+
+});
+
+gulp.task('uglify', function() {
+
+  gulp.src(paths.js)
+  .pipe(sourcemaps.init())
   .pipe(uglify({
     mangle: true,
     output: {
       beautify: false
     }
   }))
-  .pipe(gulp.dest(paths.js))
+  .pipe(rename({extname: ".min.js"}))
+  .pipe(sourcemaps.write("./")) //Write a sourcemap for browser debugging
+  .pipe(gulp.dest(paths.publicJs))
 });
 
 //
@@ -119,6 +132,7 @@ gulp.task('sass', function () {
 //
 gulp.task('default',function(){
   gulp.start('lint');
+  gulp.start('copyjs');
   gulp.start('uglify');
   gulp.start('bower');
   gulp.start('templates');
@@ -128,7 +142,7 @@ gulp.task('default',function(){
 // Watch directories For Changes
 //
 gulp.task('watch', function() {
-  gulp.watch(paths.js, ['lint','uglify']);
+  gulp.watch(paths.js, ['lint','copyjs','uglify']);
   console.log('watching directory:' + paths.js);
 
   gulp.watch(paths.templates, ['templates']);

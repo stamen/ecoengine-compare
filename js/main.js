@@ -1,3 +1,1 @@
-module.exports = function replace(options) {
-  return options.fn(this).split(options.hash.item).join(options.hash.with);
-};
+console.log("hi for there eric");
