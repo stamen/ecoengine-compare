@@ -16,6 +16,10 @@ var paths = {
   publicJs  : './public/js'
 };
 
+//
+// Check quality of Javascript
+// warn if errors or style problems are found
+//
 gulp.task('lint', function() {
   return gulp.src(paths.js)
   .pipe(jshint({
@@ -32,6 +36,10 @@ gulp.task('lint', function() {
   .pipe(jshint.reporter('jshint-stylish'));
 });
 
+//
+// Minify JS and move it to the
+// public directory
+//
 gulp.task('uglify', function() {
   gulp.src(paths.js)
   .pipe(uglify({
@@ -43,6 +51,11 @@ gulp.task('uglify', function() {
   .pipe(gulp.dest(paths.js))
 });
 
+//
+// Build handlebars templates
+// and create html files from them in
+// the public directory
+//
 gulp.task('templates', function() {
   var templateData = require('./templates/data.json'),
   options = {
@@ -57,6 +70,10 @@ gulp.task('templates', function() {
   .pipe(gulp.dest('./public'));
 });
 
+//
+// Serve contents of the public directory
+// locally on port :8080
+//
 gulp.task('webserver', function() {
   return gulp.src('./public/')
   .pipe(webserver({
@@ -67,17 +84,29 @@ gulp.task('webserver', function() {
   }));
 });
 
+//
+// Move bower fetched assets to
+// their respective places in the
+// public directory
+//
 gulp.task('bower', function() {
   return bower()
   .pipe(gulp.dest(paths.publicJs))
 });
 
+//
+// Generate CSS from Sass and move it
+// to the public directory
+//
 gulp.task('sass', function () {
   new run.Command('sass --watch ./sass:./public/css', {
     verbosity : 1
   }).exec();  // Writes "Hello World\n" to output/echo.
 })
 
+//
+// Run all default tasks
+//
 gulp.task('default',function(){
   gulp.start('lint');
   gulp.start('uglify');
@@ -86,7 +115,9 @@ gulp.task('default',function(){
   gulp.start('sass');
 });
 
-// Watch Files For Changes
+//
+// Watch directories For Changes
+//
 gulp.task('watch', function() {
   gulp.watch(paths.js, ['lint','uglify']);
   console.log('watching directory:' + paths.js);
