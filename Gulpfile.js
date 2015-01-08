@@ -7,7 +7,6 @@ var gulp       = require('gulp'),
     uglify     = require('gulp-uglify'),
     sourcemaps = require('gulp-sourcemaps'),
     webserver  = require('gulp-webserver'),
-    bower      = require('gulp-bower'),
     run        = require('gulp-run'),
     fs         = require("fs");
 
@@ -110,9 +109,12 @@ gulp.task('webserver', function() {
 // their respective places in the
 // public directory
 //
-gulp.task('bower', function() {
-  return bower()
-  .pipe(gulp.dest(paths.publicJs))
+gulp.task('bowercopy', function() {
+  run('cp -rf bower_components ./public/js/', {}).exec();
+});
+
+gulp.task('requireConfig', function() {
+  run('bower-requirejs -c ./public/js/requireConfig.js -b ./', {}).exec();
 });
 
 //
@@ -122,9 +124,7 @@ gulp.task('bower', function() {
 // There was a
 //
 gulp.task('sass', function () {
-  new run.Command('sass --watch ./sass:./public/css', {
-    verbosity : 1
-  }).exec();  // Writes "Hello World\n" to output/echo.
+  new run.Command('sass --watch ./sass:./public/css', {}).exec();
 })
 
 //
@@ -134,8 +134,9 @@ gulp.task('default',function(){
   gulp.start('lint');
   gulp.start('copyjs');
   gulp.start('uglify');
-  gulp.start('bower');
+  gulp.start('bowercopy');
   gulp.start('templates');
+  gulp.start('requireConfig');
 });
 
 //
