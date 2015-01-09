@@ -8,8 +8,7 @@ module.exports = function script(options) {
 
   options.data.pageScripts.push(options.fn(this));
 
-  if (options.hash.require && options.hash.require.length) {
+  if (options.hash.require && options.hash.require.split) {
     options.data.pageRequire = options.data.pageRequire.concat(options.hash.require.split(","));
   }
-
 };
