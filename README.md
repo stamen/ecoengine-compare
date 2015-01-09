@@ -3,13 +3,13 @@ A boilerplate front-end app for the Richmond project
 
 Setup
 ---------
-`npm install`
-`bower install`
+   * `npm install`
+   * `bower install`
 
 Build
 ----------------
-`gulp`
+   * `gulp`
 
 Develop
 ----------------
-`gulp && gulp watch`
+   * `gulp && gulp watch`
