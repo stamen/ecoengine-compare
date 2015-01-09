@@ -135,8 +135,9 @@ gulp.task('default',function(){
   gulp.start('lint');
   gulp.start('copyjs');
   gulp.start('uglify');
-  gulp.start('bowercopy');
+  gulp.start('sass');
   gulp.start('templates');
+  gulp.start('bowercopy');
   gulp.start('requireConfig');
 });
 
