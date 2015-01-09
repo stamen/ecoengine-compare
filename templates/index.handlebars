@@ -1,5 +1,13 @@
 {{>header}}
 
-Test {{#replace item="test" with="replaced"}}test{{/replace}}
+Hi {{#replace item="test" with="replaced"}}test{{/replace}}
+
+{{#script require="css"}}
+console.log("css", css);
+{{/script}}
+
+{{#script}}
+console.log("hai");
+{{/script}}
 
 {{>footer}}

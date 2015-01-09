@@ -2,8 +2,9 @@ var gulp       = require('gulp'),
     watch      = require('gulp-watch'),
     rename     = require('gulp-rename'),
     copy       = require('gulp-copy'),
-    handlebars = require("gulp-compile-handlebars"),
+    hb         = require("gulp-hb"),
     jshint     = require('gulp-jshint'),
+    replace    = require('gulp-replace'),
     uglify     = require('gulp-uglify'),
     sourcemaps = require('gulp-sourcemaps'),
     webserver  = require('gulp-webserver'),
@@ -70,24 +71,19 @@ gulp.task('uglify', function() {
 // the public directory
 //
 gulp.task('templates', function() {
-  var templateData = require('./templates/data.json'),
-  options = {
-    helpers : {},
-    batch : ['partials'],
-    ignorePartials: true
-  }
-
-  //
-  // Read helpers
-  //
-  fs.readdirSync("./helpers").forEach(function(file) {
-    options.helpers[file.split(".")[0]] = require("./helpers/" + file);
-  });
-
-  return gulp.src(paths.templates)
-  .pipe(handlebars(templateData, options))
-  .pipe(rename({extname:'.html'}))
-  .pipe(gulp.dest('./public'));
+  return gulp
+  .src('./templates/*.handlebars')
+  .pipe(hb({
+    data: './src/assets/data/**/*.{js,json}',
+    helpers: [
+    './helpers/*.js'
+    ],
+    partials: [
+    './templates/partials/*.handlebars'
+    ]
+  }))
+  .pipe(rename({extname: ".html"}))
+  .pipe(gulp.dest('./public/'));
 });
 
 //
@@ -114,7 +110,10 @@ gulp.task('bowercopy', function() {
 });
 
 gulp.task('requireConfig', function() {
-  run('bower-requirejs -c ./public/js/requireConfig.js -b ./', {}).exec();
+  run('bower-requirejs -c ./requireConfig.js -b', {}).exec();
+  gulp.src(['./requireConfig.js'])
+  .pipe(replace(/bower_components/g, '/js/bower_components'))
+  .pipe(gulp.dest('./public/js/'));
 });
 
 //
