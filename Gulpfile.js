@@ -28,6 +28,22 @@ var paths = {
 };
 
 //
+// Run all default tasks
+//
+gulp.task("default",function() {
+  gulp.start("lint");
+  gulp.start("copyjs");
+  gulp.start("uglify");
+  gulp.start("templates");
+  gulp.start("requireConfig");
+  gulp.start("sass");
+
+  setTimeout(function() {
+    gulp.start("bowercopy");
+  }, 500);
+});
+
+//
 // Check quality of Javascript
 // warn if errors or style problems are found
 //
@@ -135,22 +151,6 @@ gulp.task("sass", function () {
   fs.readdirSync("./sass").forEach(function() {
     run("sass --update sass/:./public/css", {}).exec();
   });
-});
-
-//
-// Run all default tasks
-//
-gulp.task("default",function() {
-  gulp.start("lint");
-  gulp.start("copyjs");
-  gulp.start("uglify");
-  gulp.start("templates");
-  gulp.start("requireConfig");
-  gulp.start("sass");
-
-  setTimeout(function() {
-    gulp.start("bowercopy");
-  }, 500);
 });
 
 //
