@@ -2,9 +2,7 @@
 
 var fs = require("fs");
 
-var autopolyfiller = require("gulp-autopolyfiller"),
-    concat = require("gulp-concat"),
-    copy = require("gulp-copy"),
+var copy = require("gulp-copy"),
     gulp = require("gulp"),
     hb = require("gulp-hb"),
     jshint = require("gulp-jshint"),
@@ -13,8 +11,13 @@ var autopolyfiller = require("gulp-autopolyfiller"),
     run = require("gulp-run"),
     sourcemaps = require("gulp-sourcemaps"),
     uglify = require("gulp-uglify"),
-    watch = require("gulp-watch"),
     webserver = require("gulp-webserver");
+
+// Gulp mix-ins
+
+require("gulp-autopolyfiller");
+require("gulp-concat");
+require("gulp-watch");
 
 var paths = {
   sass: "./sass",
@@ -29,18 +32,18 @@ var paths = {
 // warn if errors or style problems are found
 //
 gulp.task("lint", function() {
-  return gulp
+  gulp
     .src(paths.js)
     .pipe(jshint({
-      "predef" : [
-      "define",
-      "document",
-      "location",
-      "navigator",
-      "window",
-      "history"
+      predef: [
+        "define",
+        "document",
+        "location",
+        "navigator",
+        "window",
+        "history"
       ],
-      "expr" : true
+      expr: true
     }))
     .pipe(jshint.reporter("jshint-stylish"));
 });
@@ -50,15 +53,12 @@ gulp.task("lint", function() {
 // public directory
 //
 gulp.task("copyjs", function() {
-
   gulp
     .src(paths.js)
     .pipe(copy("./public"));
-
 });
 
 gulp.task("uglify", function() {
-
   gulp
     .src(paths.js)
     .pipe(sourcemaps.init())
@@ -79,15 +79,15 @@ gulp.task("uglify", function() {
 // the public directory
 //
 gulp.task("templates", function() {
-  return gulp
+  gulp
     .src("./templates/*.handlebars")
     .pipe(hb({
       data: "./src/assets/data/**/*.{js,json}",
       helpers: [
-      "./helpers/*.js"
+        "./helpers/*.js"
       ],
       partials: [
-      "./templates/partials/*.handlebars"
+        "./templates/partials/*.handlebars"
       ]
     }))
     .pipe(rename({extname: ".html"}))
@@ -99,7 +99,7 @@ gulp.task("templates", function() {
 // locally on port :8080
 //
 gulp.task("webserver", function() {
-  return gulp
+  gulp
     .src("./public/")
     .pipe(webserver({
       open: false, // unless you want it
@@ -154,7 +154,7 @@ gulp.task("default",function() {
 });
 
 //
-// Watch directories For Changes
+// Watch directories for changes
 //
 gulp.task("watch", function() {
   gulp.watch(paths.js, ["lint", "copyjs", "uglify"]);
