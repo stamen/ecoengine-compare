@@ -1,17 +1,17 @@
 var gulp           = require('gulp'),
-    watch          = require('gulp-watch'),
-    rename         = require('gulp-rename'),
-    concat         = require('gulp-concat'),
-    copy           = require('gulp-copy'),
-    hb             = require("gulp-hb"),
-    jshint         = require('gulp-jshint'),
-    replace        = require('gulp-replace'),
-    uglify         = require('gulp-uglify'),
-    sourcemaps     = require('gulp-sourcemaps'),
-    webserver      = require('gulp-webserver'),
-    autopolyfiller = require('gulp-autopolyfiller'),
-    run            = require('gulp-run'),
-    fs             = require("fs");
+watch          = require('gulp-watch'),
+rename         = require('gulp-rename'),
+concat         = require('gulp-concat'),
+copy           = require('gulp-copy'),
+hb             = require("gulp-hb"),
+jshint         = require('gulp-jshint'),
+replace        = require('gulp-replace'),
+uglify         = require('gulp-uglify'),
+sourcemaps     = require('gulp-sourcemaps'),
+webserver      = require('gulp-webserver'),
+autopolyfiller = require('gulp-autopolyfiller'),
+run            = require('gulp-run'),
+fs             = require("fs");
 
 var paths = {
   sass      : './sass',
@@ -137,9 +137,12 @@ gulp.task('default',function(){
   gulp.start('copyjs');
   gulp.start('uglify');
   gulp.start('templates');
-  gulp.start('bowercopy');
   gulp.start('requireConfig');
   gulp.start('sass');
+
+  setTimeout(function() {
+    gulp.start('bowercopy');
+  }, 500);
 });
 
 //
