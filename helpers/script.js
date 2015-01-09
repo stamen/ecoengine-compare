@@ -1,4 +1,8 @@
 module.exports = function script(options) {
+  "use strict";
+
+  options.data = options.data || {};
+  options.hash = options.hash || {};
 
   if (!options.data.pageScripts) {
     options.data.pageScripts = [];
