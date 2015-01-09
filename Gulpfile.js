@@ -112,8 +112,8 @@ gulp.task('bowercopy', function() {
 });
 
 gulp.task('requireConfig', function() {
-  run('bower-requirejs -c ./requireConfig.js', {}).exec();
-  gulp.src(['./requireConfig.js'])
+  run('bower-requirejs -c ./require_config.js', {}).exec();
+  gulp.src(['./require_config.js'])
   .pipe(replace(/bower_components/g, '/js/bower_components'))
   .pipe(gulp.dest('./public/js/'));
 });
