@@ -20,4 +20,4 @@ npm run build
 npm start
 ```
 
-Open http://localhost:8000/
+Open [http://localhost:8000/](http://localhost:8000/)
