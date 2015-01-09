@@ -112,7 +112,7 @@ gulp.task('bowercopy', function() {
 });
 
 gulp.task('requireConfig', function() {
-  run('bower-requirejs -c ./requireConfig.js -b', {}).exec();
+  run('bower-requirejs -c ./requireConfig.js', {}).exec();
   gulp.src(['./requireConfig.js'])
   .pipe(replace(/bower_components/g, '/js/bower_components'))
   .pipe(gulp.dest('./public/js/'));
@@ -122,10 +122,11 @@ gulp.task('requireConfig', function() {
 // Generate CSS from Sass and move it
 // to the public directory
 //
-// There was a
 //
 gulp.task('sass', function () {
-  new run.Command('sass --watch ./sass:./public/css', {}).exec();
+  fs.readdirSync("./sass").forEach(function() {
+    run('sass --update sass/:./public/css', {}).exec();
+  });
 })
 
 //
@@ -135,10 +136,10 @@ gulp.task('default',function(){
   gulp.start('lint');
   gulp.start('copyjs');
   gulp.start('uglify');
-  gulp.start('sass');
   gulp.start('templates');
   gulp.start('bowercopy');
   gulp.start('requireConfig');
+  gulp.start('sass');
 });
 
 //
@@ -151,7 +152,7 @@ gulp.task('watch', function() {
   gulp.watch(paths.templates, ['templates']);
   console.log('watching directory:' + paths.templates);
 
-  gulp.watch(paths.sass, ['sass']);
+  gulp.watch("sass/*.scss", ['sass']);
   console.log('watching directory:' + paths.sass);
 
   gulp.start('webserver');
