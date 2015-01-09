@@ -3,11 +3,8 @@ module.exports = function script(options) {
 
   options.data = options.data || {};
   options.hash = options.hash || {};
-
-  if (!options.data.pageScripts) {
-    options.data.pageScripts = [];
-    options.data.pageRequire = [];
-  }
+  options.data.pageScripts = options.data.pageScripts || [];
+  options.data.pageRequire = options.data.pageRequire || [];
 
   options.data.pageScripts.push(options.fn(this));
 
