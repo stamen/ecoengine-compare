@@ -4,7 +4,9 @@
   "description": "A boilerplate for richmond apps",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "gulp",
+    "postinstall": "bower install",
+    "start": "gulp && gulp watch"
   },
   "repository": {
     "type": "git",

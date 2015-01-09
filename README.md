@@ -1,15 +1,23 @@
 # richmond-boilerplate
+
 A boilerplate front-end app for the Richmond project
 
-Setup
----------
-   * `npm install`
-   * `bower install`
+## Setup
 
-Build
-----------------
-   * `gulp`
+```bash
+npm install
+```
 
-Develop
-----------------
-   * `gulp && gulp watch`
+## Build
+
+```bash
+npm run build
+```
+
+## Develop
+
+```bash
+npm start
+```
+
+Open http://localhost:8000/
