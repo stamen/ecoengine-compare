@@ -7,7 +7,12 @@ module.exports = function setScript(options) {
       return "\"" + req + "\"";
     }).join(","),
     "],function(",
-    options.data.pageRequire.map(function(req) {
+    options.data.pageRequire.filter(function(item) {
+      //
+      // Keep CSS dependancies out of the variable declaration
+      //
+      return (item.indexOf("css!") < 0);
+    }).map(function(req) {
       var parts = req.split("-");
 
       if (parts.length < 2) {
