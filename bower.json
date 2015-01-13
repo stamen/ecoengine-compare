@@ -18,6 +18,7 @@
   "dependencies": {
     "require-css": "~0.1.8",
     "requirejs": "~2.1.15",
-    "leaflet": "~0.7.3"
+    "leaflet": "~0.7.3",
+    "samesies": "*"
   }
 }

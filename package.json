@@ -35,6 +35,7 @@
     "gulp-hb": "~1.0.1",
     "gulp-replace": "~0.5.0",
     "gulp-autopolyfiller": "~1.2.0",
-    "gulp-concat": "~2.4.3"
+    "gulp-concat": "~2.4.3",
+    "samesies": "0.0.0"
   }
 }
