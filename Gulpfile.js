@@ -57,7 +57,8 @@ gulp.task("lint", function() {
         "location",
         "navigator",
         "window",
-        "history"
+        "history",
+        "L"
       ],
       expr: true
     }))
@@ -135,7 +136,7 @@ gulp.task("bowercopy", function() {
 });
 
 gulp.task("requireConfig", function() {
-  run("bower-requirejs -c ./require_config.js", {}).exec();
+  run("bower-requirejs -b js -c ./require_config.js", {}).exec();
   gulp
     .src(["./require_config.js"])
     .pipe(replace(/bower_components/g, "/js/bower_components"))

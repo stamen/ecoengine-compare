@@ -15,12 +15,6 @@ module.exports = function setScript(options) {
       .join(","),
     "], function(",
     options.data.pageRequire
-      .filter(function(item) {
-        //
-        // Keep CSS dependencies out of the variable declaration
-        //
-        return (item.indexOf("css!") < 0);
-      })
       .map(function(req) {
         var parts = req.split("-");
 
@@ -32,13 +26,15 @@ module.exports = function setScript(options) {
           //
           return parts
             .map(function(part, i) {
+              var partArray = part.split("/"),
+                  bestPart = partArray[partArray.length-1];
               if (i > 0) {
-                return part.substring(0, 1).toUpperCase() + part.substring(1);
+                return bestPart.substring(0, 1).toUpperCase() + bestPart.substring(1);
               } else {
-                return part;
+                return bestPart;
               }
             })
-            .join("");
+            .join("").replace(/css!/,"css");
         }
 
       })
