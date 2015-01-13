@@ -1,4 +1,4 @@
-module.exports = function setScript(options) {
+module.exports = function writeScript(options) {
   "use strict";
 
   options.data = options.data || {};
@@ -16,22 +16,20 @@ module.exports = function setScript(options) {
     "], function(",
     options.data.pageRequire
       .map(function(req) {
-        var parts = req.split("-");
+        var parts = req.split("/")[req.split("/").length-1].split("-");
 
         if (parts.length < 2) {
-          return req;
+          return parts[0];
         } else {
           //
           // Change dashed names to camelCase
           //
           return parts
             .map(function(part, i) {
-              var partArray = part.split("/"),
-                  bestPart = partArray[partArray.length-1];
               if (i > 0) {
-                return bestPart.substring(0, 1).toUpperCase() + bestPart.substring(1);
+                return part.substring(0, 1).toUpperCase() + part.substring(1);
               } else {
-                return bestPart;
+                return part;
               }
             })
             .join("").replace(/css!/,"css");
