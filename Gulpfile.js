@@ -3,15 +3,16 @@
 var fs = require("fs");
 
 var copy = require("gulp-copy"),
-    gulp = require("gulp"),
-    hb = require("gulp-hb"),
-    jshint = require("gulp-jshint"),
-    rename = require("gulp-rename"),
-    replace = require("gulp-replace"),
-    run = require("gulp-run"),
+    gulp       = require("gulp"),
+    hb         = require("gulp-hb"),
+    jshint     = require("gulp-jshint"),
+    rename     = require("gulp-rename"),
+    replace    = require("gulp-replace"),
+    run        = require("gulp-run"),
     sourcemaps = require("gulp-sourcemaps"),
-    uglify = require("gulp-uglify"),
-    webserver = require("gulp-webserver");
+    uglify     = require("gulp-uglify"),
+    env        = require('gulp-env'),
+    webserver  = require("gulp-webserver");
 
 // Gulp mix-ins
 
@@ -31,6 +32,7 @@ var paths = {
 // Run all default tasks
 //
 gulp.task("default",function() {
+  gulp.start("set-env");
   gulp.start("lint");
   gulp.start("copyjs");
   gulp.start("uglify");
@@ -41,6 +43,18 @@ gulp.task("default",function() {
   setTimeout(function() {
     gulp.start("bowercopy");
   }, 500);
+});
+
+//
+//
+//
+gulp.task('set-env', function () {
+  env({
+    file: ".env.json",
+    vars: {
+      //any vars you want to overwrite
+    }
+  });
 });
 
 //
@@ -139,7 +153,7 @@ gulp.task("requireConfig", function() {
   run("bower-requirejs -b js -c ./require_config.js", {}).exec();
   gulp
     .src(["./require_config.js"])
-    .pipe(replace(/bower_components/g, "/js/bower_components"))
+    .pipe(replace(/bower_components/g, (process.env["js-assets"] || "/") + "js/bower_components"))
     .pipe(gulp.dest("./public/js/"));
 });
 
@@ -161,7 +175,7 @@ gulp.task("watch", function() {
   gulp.watch(paths.js, ["lint", "copyjs", "uglify"]);
   console.log("watching directory:", paths.js);
 
-  gulp.watch(paths.templates, ["templates"]);
+  gulp.watch(paths.templates, ["set-env","templates"]);
   console.log("watching directory:", paths.templates);
 
   gulp.watch("sass/*.scss", ["sass"]);
