@@ -153,7 +153,7 @@ gulp.task("requireConfig", function() {
   run("bower-requirejs -b js -c ./require_config.js", {}).exec();
   gulp
     .src(["./require_config.js"])
-    .pipe(replace(/bower_components/g, (process.env["js-assets"] || "/") + "js/bower_components"))
+    .pipe(replace(/bower_components/g, (process.env["siteroot"] || "/") + "js/bower_components"))
     .pipe(gulp.dest("./public/js/"));
 });
 
