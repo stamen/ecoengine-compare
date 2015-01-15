@@ -1,4 +1,4 @@
-require(["css!leaflet","leaflet","samesies"], function(leafletCSS, leaflet, samesies) {
+require(["css!leaflet","leaflet","samesies"], function(leafletCSS, L, samesies) {
   "use strict";
 
   function IndexController() {
