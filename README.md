@@ -1,6 +1,4 @@
-# richmond-boilerplate
-
-A boilerplate front-end app for the Richmond project 
+# Berkeley Eco Engine compair demo
 
 ## Setup
 
