@@ -8,8 +8,10 @@ body {
   }
 
   .point-feature-icon {
+    width:1px !important;
+    height:1px !important;
+    margin:-.5px 0 0 -.15px !important;
     border-radius:999px;
-    background-color:blue;
-    border:solid 1px black;
+    background-color:#8286A0;
   }
 }
