@@ -1,4 +1,4 @@
-# Berkeley Eco Engine compair demo
+# Berkeley Eco Engine compare demo
 
 ## Setup
 
