@@ -1,3 +1,15 @@
 body {
-  background-color:white;
+  margin:0;
+  padding:0;
+
+  #map {
+    width:100vw;
+    height:100vw;
+  }
+
+  .point-feature-icon {
+    border-radius:999px;
+    background-color:blue;
+    border:solid 1px black;
+  }
 }
