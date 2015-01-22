@@ -8,10 +8,16 @@ body {
   }
 
   .point-feature-icon {
-    width:1px !important;
-    height:1px !important;
-    margin:-.5px 0 0 -.15px !important;
+    width:16px !important;
+    height:16px !important;
+    margin:-8px 0 0 -8px !important;
     border-radius:999px;
-    background-color:#8286A0;
+    background-color:blue;
+    opacity:.5 !important;
+
+  }
+
+  .leaflet-overlay-pane {
+    opacity:.5;
   }
 }

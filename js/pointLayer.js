@@ -6,7 +6,9 @@ define(["leaflet"],function() {
 
   function pointLayer(features, map) {
 
-    return L.layerGroup(features.map(function(feature) {
+    features.length = 5000;
+
+    return L.featureGroup(features.map(function(feature) {
       if (feature.geometry) {
         marker = L.marker([
           feature.geometry.coordinates[1],

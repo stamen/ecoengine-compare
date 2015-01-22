@@ -1,4 +1,4 @@
-require(["css!leaflet","leaflet","samesies","js/berkeley","js/pointLayer"], function(leafletCSS, L, samesies, berkeley, pointLayer) {
+require(["css!leaflet","leaflet","samesies","js/berkeley","js/hullLayer"], function(leafletCSS, L, samesies, berkeley, hullLayer) {
   "use strict";
 
   function IndexController() {
@@ -34,8 +34,16 @@ require(["css!leaflet","leaflet","samesies","js/berkeley","js/pointLayer"], func
     setTimeout(function() {
       berkeley.requestRecursive("https://dev-ecoengine.berkeley.edu/api/observations/?format=geojson&selected_facets=clss_exact%3A%22reptilia%22&&selected_facets=scientific_name_exact%3A%22Sceloporus%20occidentalis%22&q=&page_size=2000",
       function(pages) { //Done
-        console.log("Done.", pages);
-        pointLayer(pages).addTo(map);
+        //console.log("Done.", pages);
+
+        var hulllayer = hullLayer(pages);
+        hulllayer.addTo(map);
+
+        map.fitBounds(hulllayer.getBounds());
+
+
+
+
       },
       function(pages) { //Progress
         console.log("Page recieved.", pages);
@@ -46,6 +54,6 @@ require(["css!leaflet","leaflet","samesies","js/berkeley","js/pointLayer"], func
 
   var indexController = new IndexController();
 
-  console.log(indexController);
+  //console.log(indexController);
 
 });
