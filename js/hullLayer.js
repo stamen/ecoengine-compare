@@ -4,9 +4,11 @@ define(["leaflet","js/leaflet.markercluster-src"],function(leaflet, markercluste
 
   var group;
 
-  function hullLayer(features, map) {
+  function hullLayer(features, options) {
 
-    group = new L.MarkerClusterGroup();
+    group = new L.MarkerClusterGroup({
+      "sColor" : options.color
+    });
 
     features.forEach(function(feature) {
       if (feature.geometry) {
@@ -14,7 +16,7 @@ define(["leaflet","js/leaflet.markercluster-src"],function(leaflet, markercluste
           feature.geometry.coordinates[1],
           feature.geometry.coordinates[0]
         ],{
-          "icon" : L.divIcon({className: "point-feature-icon"})
+          "icon" : L.divIcon({className: "point-feature-icon point-feature-icon-" + options.color})
         }));
       }
     });

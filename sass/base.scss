@@ -13,11 +13,19 @@ body {
     margin:-8px 0 0 -8px !important;
     border-radius:999px;
     background-color:blue;
-    opacity:.5 !important;
+    opacity:.3 !important;
 
   }
 
+  .point-feature-icon-blue {
+    background-color:blue;
+  }
+
+  .point-feature-icon-red {
+    background-color:red;
+  }
+
   .leaflet-overlay-pane {
-    opacity:.5;
+    opacity:.3;
   }
 }

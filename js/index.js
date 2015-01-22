@@ -13,7 +13,7 @@ require(["css!leaflet","leaflet","samesies","js/berkeley","js/hullLayer"], funct
     function initMap() {
 
       // create a map in the "map" div, set the view to a given place and zoom
-      map = L.map("map").setView([37.5333, -77.4667], 2);
+      map = L.map("map").setView([37.5333, -77.4667], 7);
 
       // add an OpenStreetMap tile layer
       L.tileLayer("http://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png", {
@@ -32,14 +32,36 @@ require(["css!leaflet","leaflet","samesies","js/berkeley","js/hullLayer"], funct
     initMap();
 
     setTimeout(function() {
-      berkeley.requestRecursive("https://dev-ecoengine.berkeley.edu/api/observations/?format=geojson&selected_facets=clss_exact%3A%22reptilia%22&&selected_facets=scientific_name_exact%3A%22Sceloporus%20occidentalis%22&q=&page_size=2000",
+      berkeley.requestRecursive("https://dev-ecoengine.berkeley.edu/api/observations/?format=geojson&selected_facets=genus_exact%3A%22tamias%22&q=&min_date=1900-01-01&max_date=1930-12-30&page_size=2000",
       function(pages) { //Done
         //console.log("Done.", pages);
 
-        var hulllayer = hullLayer(pages);
-        hulllayer.addTo(map);
+        var hulllayer1 = hullLayer(pages, {
+          color : "blue"
+        });
+        hulllayer1.addTo(map);
 
-        map.fitBounds(hulllayer.getBounds());
+        map.fitBounds(hulllayer1.getBounds());
+
+
+
+
+      },
+      function(pages) { //Progress
+        console.log("Page recieved.", pages);
+      });
+    }, 1000);
+
+    /*
+    setTimeout(function() {
+      berkeley.requestRecursive("https://dev-ecoengine.berkeley.edu/api/observations/?format=geojson&selected_facets=kingdom_exact%3A%22animalia%22&&selected_facets=genus_exact%3A%22tamias%22&&selected_facets=resource_exact%3A%22Observations%22&q=&min_date=1970-01-01&max_date=2010-12-30&page_size=2000",
+      function(pages) { //Done
+        //console.log("Done.", pages);
+
+        var hulllayer2 = hullLayer(pages, {
+          color : "red"
+        });
+        hulllayer2.addTo(map);
 
 
 
@@ -49,6 +71,7 @@ require(["css!leaflet","leaflet","samesies","js/berkeley","js/hullLayer"], funct
         console.log("Page recieved.", pages);
       });
     }, 100);
+    */
 
   }
 
