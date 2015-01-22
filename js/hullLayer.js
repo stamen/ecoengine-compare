@@ -1,4 +1,4 @@
-define(["leaflet","js/leaflet.markercluster-src"],function(leaflet, markercluster) {
+(function(exports) {
 
   "use strict";
 
@@ -25,6 +25,6 @@ define(["leaflet","js/leaflet.markercluster-src"],function(leaflet, markercluste
 
   }
 
-  return hullLayer;
+  exports.hullLayer = hullLayer;
 
-});
+}(window.STMN));

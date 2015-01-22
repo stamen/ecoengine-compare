@@ -1,4 +1,4 @@
-define(["leaflet"],function() {
+(function(exports) {
 
   "use strict";
 
@@ -25,6 +25,6 @@ define(["leaflet"],function() {
 
   }
 
-  return pointLayer;
+  exports.pointLayer = pointLayer;
 
-});
+}(window.STMN));

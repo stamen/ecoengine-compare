@@ -1,4 +1,4 @@
-define(function() {
+(function(exports) {
 
   "use strict";
 
@@ -60,8 +60,8 @@ define(function() {
 
   }
 
-  return {
+  exports.berkeley = {
     "requestRecursive" : requestRecursive
   };
 
-});
+}(window.STMN));

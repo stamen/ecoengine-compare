@@ -1,14 +1,9 @@
-require(["css!leaflet","leaflet","samesies","js/berkeley","js/hullLayer"], function(leafletCSS, L, samesies, berkeley, hullLayer) {
+(function(exports) {
   "use strict";
 
   function IndexController() {
 
-    var that = this,
-        map;
-
-    samesies.mix(that);
-
-
+    var map;
 
     function initMap() {
 
@@ -20,10 +15,6 @@ require(["css!leaflet","leaflet","samesies","js/berkeley","js/hullLayer"], funct
         attribution: "&copy; <a href=\"http://osm.org/copyright\">OpenStreetMap</a> contributors"
       }).addTo(map);
 
-      map.on("moveend", function() {
-        that.fire("moved");
-      });
-
     }
 
     //
@@ -32,11 +23,11 @@ require(["css!leaflet","leaflet","samesies","js/berkeley","js/hullLayer"], funct
     initMap();
 
     setTimeout(function() {
-      berkeley.requestRecursive("https://dev-ecoengine.berkeley.edu/api/observations/?format=geojson&selected_facets=genus_exact%3A%22tamias%22&q=&min_date=1900-01-01&max_date=1930-12-30&page_size=2000",
+      exports.berkeley.requestRecursive("https://dev-ecoengine.berkeley.edu/api/observations/?format=geojson&selected_facets=genus_exact%3A%22tamias%22&q=&min_date=1900-01-01&max_date=1930-12-30&page_size=2000",
       function(pages) { //Done
         //console.log("Done.", pages);
 
-        var hulllayer1 = hullLayer(pages, {
+        var hulllayer1 = exports.hullLayer(pages, {
           color : "blue"
         });
         hulllayer1.addTo(map);
@@ -54,11 +45,11 @@ require(["css!leaflet","leaflet","samesies","js/berkeley","js/hullLayer"], funct
 
     /*
     setTimeout(function() {
-      berkeley.requestRecursive("https://dev-ecoengine.berkeley.edu/api/observations/?format=geojson&selected_facets=kingdom_exact%3A%22animalia%22&&selected_facets=genus_exact%3A%22tamias%22&&selected_facets=resource_exact%3A%22Observations%22&q=&min_date=1970-01-01&max_date=2010-12-30&page_size=2000",
+      exports.berkeley.requestRecursive("https://dev-ecoengine.berkeley.edu/api/observations/?format=geojson&selected_facets=kingdom_exact%3A%22animalia%22&&selected_facets=genus_exact%3A%22tamias%22&&selected_facets=resource_exact%3A%22Observations%22&q=&min_date=1970-01-01&max_date=2010-12-30&page_size=2000",
       function(pages) { //Done
         //console.log("Done.", pages);
 
-        var hulllayer2 = hullLayer(pages, {
+        var hulllayer2 = exports.hullLayer(pages, {
           color : "red"
         });
         hulllayer2.addTo(map);
@@ -75,8 +66,6 @@ require(["css!leaflet","leaflet","samesies","js/berkeley","js/hullLayer"], funct
 
   }
 
-  var indexController = new IndexController();
+  (new IndexController());
 
-  //console.log(indexController);
-
-});
+}(window.STMN));

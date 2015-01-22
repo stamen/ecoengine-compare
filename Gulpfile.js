@@ -2,22 +2,23 @@
 
 var fs = require("fs");
 
-var copy = require("gulp-copy"),
-    gulp       = require("gulp"),
-    hb         = require("gulp-hb"),
-    jshint     = require("gulp-jshint"),
-    rename     = require("gulp-rename"),
-    replace    = require("gulp-replace"),
-    run        = require("gulp-run"),
-    sourcemaps = require("gulp-sourcemaps"),
-    uglify     = require("gulp-uglify"),
-    env        = require('gulp-env'),
-    webserver  = require("gulp-webserver");
+var copy           = require("gulp-copy"),
+    gulp           = require("gulp"),
+    hb             = require("gulp-hb"),
+    jshint         = require("gulp-jshint"),
+    rename         = require("gulp-rename"),
+    replace        = require("gulp-replace"),
+    run            = require("gulp-run"),
+    sourcemaps     = require("gulp-sourcemaps"),
+    uglify         = require("gulp-uglify"),
+    env            = require('gulp-env'),
+    webserver      = require("gulp-webserver"),
+    concat         = require('gulp-concat'),
+    mainBowerFiles = require('main-bower-files');
 
 // Gulp mix-ins
 
 require("gulp-autopolyfiller");
-require("gulp-concat");
 require("gulp-watch");
 
 var paths = {
@@ -34,15 +35,10 @@ var paths = {
 gulp.task("default",function() {
   gulp.start("set-env");
   gulp.start("lint");
-  gulp.start("copyjs");
   gulp.start("uglify");
   gulp.start("templates");
-  gulp.start("requireConfig");
   gulp.start("sass");
-
-  setTimeout(function() {
-    gulp.start("bowercopy");
-  }, 500);
+  gulp.start("vendor-css");
 });
 
 //
@@ -72,27 +68,20 @@ gulp.task("lint", function() {
         "navigator",
         "window",
         "history",
-        "L"
+        "L",
+        "STMN"
       ],
       expr: true
     }))
     .pipe(jshint.reporter("jshint-stylish"));
 });
 
-//
-// Minify JS and move it to the
-// public directory
-//
-gulp.task("copyjs", function() {
-  gulp
-    .src(paths.js)
-    .pipe(copy("./public"));
-});
-
 gulp.task("uglify", function() {
   gulp
-    .src(paths.js)
+    .src(mainBowerFiles().filter(function(f) {return (f.substring(f.length-3) === ".js")}).concat([paths.js]))
     .pipe(sourcemaps.init())
+    .pipe(concat('ecoengine-compare.js'))
+    .pipe(gulp.dest(paths.publicJs))
     .pipe(uglify({
       mangle: true,
       output: {
@@ -141,23 +130,6 @@ gulp.task("webserver", function() {
 });
 
 //
-// Move bower fetched assets to
-// their respective places in the
-// public directory
-//
-gulp.task("bowercopy", function() {
-  run("cp -rf bower_components ./public/js/", {}).exec();
-});
-
-gulp.task("requireConfig", function() {
-  run("bower-requirejs -b js -c ./require_config.js", {}).exec();
-  gulp
-    .src(["./require_config.js"])
-    .pipe(replace(/\.\.\/bower_components/g, (process.env["siteroot"] || "/") + "js/bower_components"))
-    .pipe(gulp.dest("./public/js/"));
-});
-
-//
 // Generate CSS from Sass and move it
 // to the public directory
 //
@@ -168,11 +140,18 @@ gulp.task("sass", function () {
   });
 });
 
+gulp.task("vendor-css", function() {
+  gulp
+  .src(mainBowerFiles().filter(function(f) {return (f.substring(f.length-4) === ".css")}))
+  .pipe(concat("vendor.css"))
+  .pipe(gulp.dest(paths.css));
+});
+
 //
 // Watch directories for changes
 //
 gulp.task("watch", function() {
-  gulp.watch(paths.js, ["lint", "copyjs", "uglify"]);
+  gulp.watch(paths.js, ["lint", "uglify"]);
   console.log("watching directory:", paths.js);
 
   gulp.watch(paths.templates, ["set-env","templates"]);
