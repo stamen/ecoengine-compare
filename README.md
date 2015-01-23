@@ -6,18 +6,11 @@
 npm install
 ```
 
-This ...
-
-## Build
-
-```bash
-npm run dist
-```
-
 ## Deploy
 
 ```bash
-scp -prq ./public/. studio.stamen.com:www/berkeley/show/latest/compare
+npm run dist
+scp -prq ./public/. studio.stamen.com:www/berkeley/show/compare/
 ```
 
 Open [http://studio.stamen.com/berkeley/show/compare/](http://studio.stamen.com/berkeley/show/compare/)
