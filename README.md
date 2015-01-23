@@ -10,7 +10,7 @@ cp .env.json.sample .env.json
 ## Deploy
 
 ```bash
-npm run dist
+gulp dist
 scp -prq ./public/. studio.stamen.com:www/berkeley/show/compare/
 ```
 
