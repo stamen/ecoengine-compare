@@ -26,6 +26,7 @@ var paths = {
   css: "./public/css",
   templates: "./templates/*.handlebars",
   js: "./js/*.js",
+  viewJs: "./viewJs/*.js",
   publicJs: "./public/js"
 };
 
@@ -36,6 +37,7 @@ gulp.task("default",function() {
   gulp.start("set-env");
   gulp.start("lint");
   gulp.start("uglify");
+  gulp.start("uglifyViewJs");
   gulp.start("templates");
   gulp.start("sass");
   gulp.start("vendor-css");
@@ -50,6 +52,7 @@ gulp.task("dist",function() {
   });
   gulp.start("lint");
   gulp.start("uglify");
+  gulp.start("uglifyViewJs");
   gulp.start("templates");
   gulp.start("sass");
   gulp.start("vendor-css");
@@ -105,6 +108,22 @@ gulp.task("uglify", function() {
     .pipe(rename({extname: ".min.js"}))
     .pipe(sourcemaps.write("./")) // Write a sourcemap for browser debugging
     .pipe(gulp.dest(paths.publicJs));
+});
+
+gulp.task("uglifyViewJs", function() {
+  gulp
+  .src([paths.viewJs])
+  .pipe(sourcemaps.init())
+  .pipe(gulp.dest(paths.publicJs))
+  .pipe(uglify({
+    mangle: true,
+    output: {
+      beautify: false
+    }
+  }))
+  .pipe(rename({extname: ".min.js"}))
+  .pipe(sourcemaps.write("./")) // Write a sourcemap for browser debugging
+  .pipe(gulp.dest(paths.publicJs));
 });
 
 //
@@ -165,7 +184,7 @@ gulp.task("vendor-css", function() {
 // Watch directories for changes
 //
 gulp.task("watch", function() {
-  gulp.watch(paths.js, ["lint", "uglify"]);
+  gulp.watch([paths.js, paths.viewJs], ["lint", "uglify", "uglifyViewJs"]);
   console.log("watching directory:", paths.js);
 
   gulp.watch(paths.templates, ["set-env","templates"]);
