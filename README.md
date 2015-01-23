@@ -4,6 +4,7 @@
 
 ```bash
 npm install
+cp .env.json.sample .env.json
 ```
 
 ## Deploy
