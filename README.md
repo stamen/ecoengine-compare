@@ -33,3 +33,8 @@ Open [http://localhost:8000/](http://localhost:8000/)
 bower install [bower package name]
 ```
 _All bower components are bundled into the minified JS for the site. Any required css is wrapped into vendor.css and included in the header_
+
+## Things to know about JS
+   * All JS is linted as you save. Errors can stop JS from being built. Keep you eye on the terminal for errors
+   * view specific code is in the ./viewJs file and all shared scripts are in the ./js folder.
+   * All js is included in the footer.
