@@ -14,7 +14,8 @@ var copy           = require("gulp-copy"),
     env            = require('gulp-env'),
     webserver      = require("gulp-webserver"),
     concat         = require('gulp-concat'),
-    mainBowerFiles = require('main-bower-files');
+    mainBowerFiles = require('main-bower-files'),
+    wrap           = require("gulp-wrap");
 
 // Gulp mix-ins
 
@@ -97,6 +98,7 @@ gulp.task("uglify", function() {
   gulp
     .src(mainBowerFiles().filter(function(f) {return (f.substring(f.length-3) === ".js")}).concat([paths.js]))
     .pipe(sourcemaps.init())
+    .pipe(wrap("(function(STMN){<%= contents %>}(window.STMN));"))
     .pipe(concat('ecoengine-compare.js'))
     .pipe(gulp.dest(paths.publicJs))
     .pipe(uglify({
@@ -114,6 +116,7 @@ gulp.task("uglifyViewJs", function() {
   gulp
   .src([paths.viewJs])
   .pipe(sourcemaps.init())
+  .pipe(wrap("(function(STMN){<%= contents %>}(window.STMN));"))
   .pipe(gulp.dest(paths.publicJs))
   .pipe(uglify({
     mangle: true,

@@ -1,21 +1,19 @@
-(function(exports) {
+"use strict";
 
-  "use strict";
+var marker;
 
-  var marker;
+function pointLayer(features, map) {
 
-  function pointLayer(features, map) {
+  features.length = 5000;
 
-    features.length = 5000;
-
-    return L.featureGroup(features.map(function(feature) {
-      if (feature.geometry) {
-        marker = L.marker([
-          feature.geometry.coordinates[1],
-          feature.geometry.coordinates[0]
-          ],{
-            "icon" : L.divIcon({className: "point-feature-icon"})
-          });
+  return L.featureGroup(features.map(function(feature) {
+    if (feature.geometry) {
+      marker = L.marker([
+        feature.geometry.coordinates[1],
+        feature.geometry.coordinates[0]
+        ],{
+          "icon" : L.divIcon({className: "point-feature-icon"})
+        });
 
         return marker;
       } else {
@@ -23,8 +21,6 @@
       }
     }).filter(function(f) {return (f);}));
 
-  }
+}
 
-  exports.pointLayer = pointLayer;
-
-}(window.STMN));
+STMN.pointLayer = pointLayer;
