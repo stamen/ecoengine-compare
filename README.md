@@ -4,7 +4,6 @@
 
 ```bash
 npm install
-bower install
 ```
 
 This ...
