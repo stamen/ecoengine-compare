@@ -9,6 +9,8 @@ function LayerMenuController() {
     onstart: function(event) {
       event.target.setAttribute('data-x', event.target.offsetParent.offsetLeft);
       event.target.setAttribute('data-y', event.target.offsetParent.offsetTop);
+
+      event.target.parentNode.classList.add("dragging");
     },
 
     // call this function on every dragmove event
@@ -33,6 +35,7 @@ function LayerMenuController() {
 
       event.target.style["-webkit-transform"] = "translate(0,0)";
       event.target.style["transform"] = "translate(0,0)";
+      event.target.parentNode.classList.remove("dragging");
 
     }
   };
