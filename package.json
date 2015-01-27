@@ -1,7 +1,7 @@
 {
-  "name": "richmond-boilerplate",
+  "name": "ecoengine-compare",
   "version": "0.0.0",
-  "description": "A boilerplate for richmond apps",
+  "description": "A compare view for eco engine data",
   "main": "index.js",
   "scripts": {
     "build": "gulp",
@@ -10,14 +10,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/stamen/richmond-boilerplate.git"
+    "url": "git://github.com/stamen/ecoengine-compare.git"
   },
   "author": "evg@stamen.com",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/stamen/richmond-boilerplate/issues"
+    "url": "https://github.com/stamen/ecoengine-compare/issues"
   },
-  "homepage": "https://github.com/stamen/richmond-boilerplate",
+  "homepage": "https://github.com/stamen/ecoengine-compare",
   "dependencies": {
     "gulp-watch": "~3.0.0",
     "gulp": "~3.8.10",
