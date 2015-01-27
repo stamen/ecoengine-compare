@@ -17,7 +17,7 @@
   padding: 10px;
   width: 80%;
   transition: background-color 0.3s, border-color 0.3s;
-  height:200px;
+  min-height:150px;
 }
 
 .drop-active {
@@ -40,23 +40,27 @@
   transform: translate(0px, 0px);
 
   transition: background-color 0.3s;
+
+  width:100%;
 }
 
-.drag-drop.can-drop { background-color: #4e4; }
+.drag-drop.can-drop {
+  background-color: #4e4;
+  transform:;
+}
 </style>
 
 <div id="hash-display"></div>
 
-<div id="yes-drop" class="draggable drag-drop"> <div class="grab" style="height:100px;width:100px;background-color:black;"></div> #yes-drop </div>
-<div id="yes-drop-2" class="draggable-2 drag-drop"> #yes-drop-2 </div>
-
-<div id="dropzone" class="dropzone1">
-</div>
+<ul id="dropzone" class="dropzone1">
+  <li id="yes-drop" class="draggable drag-drop"> <div class="grab" style="height:100px;width:100px;background-color:black;"></div> #yes-drop </li>
+</ul>
 <br><br>
-<div id="dropzone" class="dropzone2">
-</div>
+<ul id="dropzone" class="dropzone2">
+  <li id="yes-drop-2" class="draggable-2 drag-drop"> #yes-drop-2 </li>
+</ul>
 <br><br>
-<div id="dropzone" class="dropzone3">
-</div>
+<ul id="dropzone" class="dropzone3">
+</ul>
 
 {{>footer}}
