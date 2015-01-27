@@ -6,7 +6,9 @@ function LayerMenuController() {
 
     dynamicDrop: true,
 
-    onstart: function() {
+    onstart: function(event) {
+      event.target.setAttribute('data-x', event.target.offsetParent.offsetLeft);
+      event.target.setAttribute('data-y', event.target.offsetParent.offsetTop);
     },
 
     // call this function on every dragmove event
@@ -46,7 +48,6 @@ function LayerMenuController() {
     ondropactivate: function (event) {
       // add active dropzone feedback
       event.target.classList.add('drop-active');
-      console.log('active');
     },
     ondragenter: function (event) {
       var draggableElement = event.relatedTarget,
@@ -71,7 +72,6 @@ function LayerMenuController() {
       event.target.classList.remove('drop-target');
     },
     ondropmove: function() {
-      console.log("move");
     }
   };
 
