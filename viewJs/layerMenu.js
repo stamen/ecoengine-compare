@@ -39,11 +39,11 @@ function LayerMenuController() {
           var dragPosState = [[event.pageX, event.pageY], [(dropZone.offsetLeft+dropZone.parentNode.offsetLeft+dropZone.offsetWidth)/2, (dropZone.offsetTop+dropZone.parentNode.offsetTop+dropZone.offsetHeight)/2]];
 
           if (dragPosState[0][1] < dragPosState[1][1]) {
-            dropZone.style.marginTop = "100px";
+            dropZone.style.marginTop = target.offsetHeight + "px";
             dropZone.style.marginBottom = "0";
           } else {
             dropZone.style.marginTop = "0";
-            dropZone.style.marginBottom = "100px";
+            dropZone.style.marginBottom = target.offsetHeight + "px";
           }
         }
       }
@@ -81,22 +81,15 @@ function LayerMenuController() {
       // remove the drop feedback style
       event.target.classList.remove('drop-target');
       event.relatedTarget.classList.remove('can-drop');
-
-      if (event.target.classList.contains("draggable")) {
-        event.target.style.marginTop = "0";
-        event.target.style.marginBottom = "0";
-      }
+      clearMargins();
     },
     ondrop: function dropEvent(event) {
       if (event.target.classList.contains("draggable") || event.target.classList.contains("draggable-2")) {
-        //appendInPosition(event.relatedTarget, event.target.parentNode, event.target.parentNode.getAttribute("data-position"));
-        event.target.parentNode.insertBefore(event.relatedTarget, event.target)
-        event.target.style.marginTop = "0";
-        event.target.style.marginBottom = "0";
+        event.target.parentNode.insertBefore(event.relatedTarget, event.target);
       } else {
         event.target.appendChild(event.relatedTarget);
       }
-
+      clearMargins();
     },
     ondropdeactivate: function (event) {
       // remove active dropzone feedback
@@ -108,38 +101,15 @@ function LayerMenuController() {
     }
   };
 
-  function appendInPosition(item, container, position) {
-    var scrapDiv = document.createElement("div");
+  function clearMargins() {
+    var dropzones = document.querySelectorAll(".dropzone");
 
-    if (container.children.length) {
-
-      var l=container.children.length;
-
-      for (var i=0; l > i; i++) {
-
-        if (position|0 === i) {
-          console.log(item, typeof item);
-          scrapDiv.appendChild(item);
-        }
-
-        console.log(container.children[i], typeof container.children[i], i);
-        scrapDiv.appendChild(container.children[i]);
+    for (var i=0; dropzones.length > i; i++) {
+      for (var ii=0; dropzones[i].children.length > ii; ii++) {
+        dropzones[i].children[ii].style.marginTop = "0";
+        dropzones[i].children[ii].style.marginBottom = "0";
       }
-
-      console.log("count", scrapDiv.children);
-
-      l = scrapDiv.children.length;
-
-      for (var i=0; l > i; i++) {
-        console.log("--",scrapDiv.children[i]);
-        if (scrapDiv.children[i]) {
-          container.appendChild(scrapDiv.children[i]);
-        }
-      }
-    } else {
-      scrapDiv.appendChild(item);
     }
-
   }
 
   // target elements with the "draggable" class
