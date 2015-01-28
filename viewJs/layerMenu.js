@@ -2,20 +2,37 @@
 
 function LayerMenuController() {
 
-  var dragConfig = {
+  var oldParent;
 
-    dynamicDrop: true,
+  var dragConfig = {
 
     onstart: function(event) {
 
-      event.target.setAttribute('data-x', event.target.offsetLeft-event.target.parentNode.offsetLeft);
-      event.target.setAttribute('data-y', event.target.offsetTop-event.target.parentNode.offsetTop);
+      var oTop    = event.target.offsetTop,
+          oLeft   = event.target.offsetLeft,
+          oParent = event.target.parentNode;
+
+      oldParent = oParent;
+
+      document.querySelector("body").appendChild(event.target);
+
+      event.target.setAttribute('data-x', (event.clientX-event.target.offsetLeft)-(event.clientX-oLeft));
+      event.target.setAttribute('data-y', (event.clientY-event.target.offsetTop)-(event.clientY-oTop));
+
+      /*
+      event.target.style.webkitTransform =
+      event.target.style.transform =
+      'translate(' + (event.pageX-event.target.offsetLeft) + 'px, ' + (event.pageY-event.target.offsetTop) + 'px)';
+      */
 
       event.target.parentNode.classList.add("dragging");
     },
 
     // call this function on every dragmove event
     onmove: function (event) {
+
+      //event.target.setAttribute('data-x', event.target.offsetLeft-event.target.parentNode.offsetLeft);
+      //event.target.setAttribute('data-y', event.target.offsetTop-event.target.parentNode.offsetTop);
 
       var target = event.target,
       // keep the dragged position in the data-x/data-y attributes
@@ -54,6 +71,11 @@ function LayerMenuController() {
       event.target.style["transform"] = "translate(0,0)";
       event.target.parentNode.classList.remove("dragging");
 
+      if (event.target.parentNode.tagName === "BODY") {
+        oldParent.appendChild(event.target);
+      }
+
+      oldParent = null;
     }
   };
 
