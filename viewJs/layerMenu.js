@@ -2,8 +2,6 @@
 
 function LayerMenuController() {
 
-  var b = 0;
-
   var dragConfig = {
 
     dynamicDrop: true,
@@ -56,8 +54,6 @@ function LayerMenuController() {
       event.target.style["transform"] = "translate(0,0)";
       event.target.parentNode.classList.remove("dragging");
 
-      event.target.parentNode.style.zIndex = "inherit";
-
     }
   };
 
@@ -92,9 +88,9 @@ function LayerMenuController() {
       }
     },
     ondrop: function dropEvent(event) {
-      //console.log("event",event);
-      if (event.target.classList.contains("draggable")) {
-        event.target.parentNode.appendChild(event.relatedTarget);
+      if (event.target.classList.contains("draggable") || event.target.classList.contains("draggable-2")) {
+        //appendInPosition(event.relatedTarget, event.target.parentNode, event.target.parentNode.getAttribute("data-position"));
+        event.target.parentNode.insertBefore(event.relatedTarget, event.target)
         event.target.style.marginTop = "0";
         event.target.style.marginBottom = "0";
       } else {
@@ -112,13 +108,47 @@ function LayerMenuController() {
     }
   };
 
+  function appendInPosition(item, container, position) {
+    var scrapDiv = document.createElement("div");
+
+    if (container.children.length) {
+
+      var l=container.children.length;
+
+      for (var i=0; l > i; i++) {
+
+        if (position|0 === i) {
+          console.log(item, typeof item);
+          scrapDiv.appendChild(item);
+        }
+
+        console.log(container.children[i], typeof container.children[i], i);
+        scrapDiv.appendChild(container.children[i]);
+      }
+
+      console.log("count", scrapDiv.children);
+
+      l = scrapDiv.children.length;
+
+      for (var i=0; l > i; i++) {
+        console.log("--",scrapDiv.children[i]);
+        if (scrapDiv.children[i]) {
+          container.appendChild(scrapDiv.children[i]);
+        }
+      }
+    } else {
+      scrapDiv.appendChild(item);
+    }
+
+  }
+
   // target elements with the "draggable" class
   interact('.draggable')
   .draggable(dragConfig).allowFrom(".grab").dropzone(dropConfig);
 
   // target elements with the "draggable" class
   interact('.draggable-2')
-  .draggable(dragConfig).dropzone(dropConfig);
+  .draggable(dragConfig).dropzone(dropConfig).dropzone(dropConfig);
 
   interact('.dropzone1').dropzone(dropConfig);
 
