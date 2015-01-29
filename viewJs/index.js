@@ -10,7 +10,7 @@ function IndexController() {
     map = L.map("map").setView([37.5333, -77.4667], 7);
 
     // add an OpenStreetMap tile layer
-    L.tileLayer("http://{s}.tile.stamen.com/toner-lite/{z}/{x}/{y}.png", {
+    L.tileLayer("http://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png", {
       attribution: "&copy; <a href=\"http://osm.org/copyright\">OpenStreetMap</a> contributors"
     }).addTo(map);
 
