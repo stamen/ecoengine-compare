@@ -9,8 +9,6 @@ function hullLayer(features, options) {
     spiderfyDistanceMultiplier: 0
   });
 
-  console.log(features.length, options.color);
-
   features.forEach(function(feature) {
     if (feature.geometry) {
       group.addLayer(L.marker([

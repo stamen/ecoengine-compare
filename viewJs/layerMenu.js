@@ -56,11 +56,13 @@ function LayerMenuController() {
           var dragPosState = [[event.pageX, event.pageY], [(dropZone.offsetLeft+dropZone.parentNode.offsetLeft+dropZone.offsetWidth)/2, (dropZone.offsetTop+dropZone.parentNode.offsetTop+dropZone.offsetHeight)/2]];
 
           if (dragPosState[0][1] < dragPosState[1][1]) {
-            dropZone.style.marginTop = target.offsetHeight + "px";
-            dropZone.style.marginBottom = "0";
+            dropZone.style.borderTop = "inset 3px black";
+            dropZone.style.borderBottom = "none";
+            dropZone.setAttribute("data-drop-direction","top");
           } else {
-            dropZone.style.marginTop = "0";
-            dropZone.style.marginBottom = target.offsetHeight + "px";
+            dropZone.style.borderTop = "none";
+            dropZone.style.borderBottom = "inset 3px black";
+            dropZone.setAttribute("data-drop-direction","bottom");
           }
         }
       }
@@ -107,7 +109,17 @@ function LayerMenuController() {
     },
     ondrop: function dropEvent(event) {
       if (event.target.classList.contains("draggable") || event.target.classList.contains("draggable-2")) {
-        event.target.parentNode.insertBefore(event.relatedTarget, event.target);
+
+        if (event.target.getAttribute("data-drop-direction") === "top") {
+          event.target.parentNode.insertBefore(event.relatedTarget, event.target);
+        } else {
+          if (event.target.nextSibling) {
+            event.target.parentNode.insertBefore(event.relatedTarget, event.target.nextSibling);
+          } else {
+            event.target.parentNode.appendChild(event.relatedTarget);
+          }
+        }
+
       } else {
         event.target.appendChild(event.relatedTarget);
       }
@@ -128,10 +140,26 @@ function LayerMenuController() {
 
     for (var i=0; dropzones.length > i; i++) {
       for (var ii=0; dropzones[i].children.length > ii; ii++) {
-        dropzones[i].children[ii].style.marginTop = "0";
-        dropzones[i].children[ii].style.marginBottom = "0";
+        dropzones[i].children[ii].style.borderTop = "none";
+        dropzones[i].children[ii].style.borderBottom = "none";
+        dropzones[i].children[ii].setAttribute("data-drop-direction",null);
       }
     }
+  }
+
+  function debounce(func, wait, immediate) {
+    var timeout;
+    return function() {
+      var context = this, args = arguments;
+      var later = function() {
+        timeout = null;
+        if (!immediate) {func.apply(context, args);}
+      };
+      var callNow = immediate && !timeout;
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+      if (callNow) {func.apply(context, args);}
+    };
   }
 
   // target elements with the "draggable" class
