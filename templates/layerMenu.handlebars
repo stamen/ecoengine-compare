@@ -7,7 +7,7 @@
   border: dashed 4px transparent;
   border-radius: 4px;
   padding: 10px;
-  width: 40%;
+  width: 400px;
   transition: background-color 0.3s, border-color 0.3s;
   min-height:100px;
 
@@ -35,7 +35,7 @@
 
   transition: background-color 0.3s;
 
-  width:100%;
+  width:400px;
 
   z-index:10;
 }
@@ -45,7 +45,7 @@
 
 .dragging .drag-drop {
   position:static;
-  width: 70%;
+  width: 400px;
 }
 
 .grab {
@@ -58,15 +58,15 @@
 
 <div id="hash-display"></div>
 
-<h2>Point</h2>
+<h2>Point <button data-for="dropzone1" class="add-action">+</button></h2>
 <ul class="dropzone dropzone1">
-  <li id="yes-drop" class="draggable drag-drop" data-position="1"> <div class="grab"></div> #yes-drop </li>
+  <li id="yes-drop" class="draggable drag-drop" data-position="1"> <div class="grab"></div> Query </li>
 </ul>
-<h2>Polygon</h2>
+<h2>Polygon <button data-for="dropzone2" class="add-action">+</button></h2>
 <ul class="dropzone dropzone2">
-  <li id="yes-drop-2" class="draggable-2 drag-drop" data-position="1"> <div class="grab"></div> #yes-drop-2 </li>
+  <li id="yes-drop-2" class="draggable-2 drag-drop" data-position="1"> <div class="grab"></div> Query </li>
 </ul>
-<h2>Hexagon</h2>
+<h2>Hexagon <button data-for="dropzone3" class="add-action">+</button></h2>
 <ul class="dropzone dropzone3">
 </ul>
 

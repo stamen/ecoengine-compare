@@ -56,12 +56,12 @@ function LayerMenuController() {
           var dragPosState = [[event.pageX, event.pageY], [(dropZone.offsetLeft+dropZone.parentNode.offsetLeft+dropZone.offsetWidth)/2, (dropZone.offsetTop+dropZone.parentNode.offsetTop+dropZone.offsetHeight)/2]];
 
           if (dragPosState[0][1] < dragPosState[1][1]) {
-            dropZone.style.borderTop = "inset 3px black";
+            //dropZone.style.borderTop = "inset 3px black";
             dropZone.style.borderBottom = "none";
             dropZone.setAttribute("data-drop-direction","top");
           } else {
             dropZone.style.borderTop = "none";
-            dropZone.style.borderBottom = "inset 3px black";
+            //dropZone.style.borderBottom = "inset 3px black";
             dropZone.setAttribute("data-drop-direction","bottom");
           }
         }
@@ -162,6 +162,16 @@ function LayerMenuController() {
     };
   }
 
+  function append(rootNode, html) {
+    var div = document.createElement("div");
+    div.innerHTML = html;
+    while (div.children.length > 0) {
+      rootNode.appendChild(div.children[0]);
+    }
+
+    return rootNode;
+  }
+
   // target elements with the "draggable" class
   interact('.draggable')
   .draggable(dragConfig).allowFrom(".grab").dropzone(dropConfig);
@@ -175,6 +185,14 @@ function LayerMenuController() {
   interact('.dropzone2').dropzone(dropConfig);
 
   interact('.dropzone3').dropzone(dropConfig);
+
+  var actions = document.querySelectorAll(".add-action");
+
+  for (var i=0; actions.length > i; i++) {
+    actions[i].addEventListener("click", function(e) {
+      append(document.querySelector("." + e.target.getAttribute("data-for")), "<li id=\"yes-drop\" class=\"draggable drag-drop\" data-position=\"1\"> <div class=\"grab\"></div> Query </li>");
+    });
+  }
 
 }
 
