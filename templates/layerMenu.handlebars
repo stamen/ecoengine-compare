@@ -6,11 +6,10 @@
   background-color: #ccc;
   border: dashed 4px transparent;
   border-radius: 4px;
-  margin: 10px auto 30px;
   padding: 10px;
-  width: 80%;
+  width: 40%;
   transition: background-color 0.3s, border-color 0.3s;
-  min-height:150px;
+  min-height:100px;
 
   z-index:1;
 }
@@ -26,7 +25,7 @@
 .drag-drop {
   display:inline-block;
   min-width: 40px;
-  padding: 2em 0.5em;
+  padding: 3px;
 
   background-color: #99e;
   border: solid 2px white;
@@ -42,24 +41,32 @@
 }
 
 .drag-drop.can-drop {
-  background-color: #4e4;
 }
 
 .dragging .drag-drop {
   position:static;
+  width: 70%;
+}
+
+.grab {
+  height:15px;
+  width:15px;
+  background-color:black;
+  display:inline-block;
 }
 </style>
 
 <div id="hash-display"></div>
 
+<h2>Point</h2>
 <ul class="dropzone dropzone1">
-  <li id="yes-drop" class="draggable drag-drop" data-position="1"> <div class="grab" style="height:100px;width:100px;background-color:black;"></div> #yes-drop </li>
+  <li id="yes-drop" class="draggable drag-drop" data-position="1"> <div class="grab"></div> #yes-drop </li>
 </ul>
-<br><br>
+<h2>Polygon</h2>
 <ul class="dropzone dropzone2">
-  <li id="yes-drop-2" class="draggable-2 drag-drop" data-position="1"> #yes-drop-2 </li>
+  <li id="yes-drop-2" class="draggable-2 drag-drop" data-position="1"> <div class="grab"></div> #yes-drop-2 </li>
 </ul>
-<br><br>
+<h2>Hexagon</h2>
 <ul class="dropzone dropzone3">
 </ul>
 

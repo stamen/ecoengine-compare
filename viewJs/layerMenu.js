@@ -168,7 +168,7 @@ function LayerMenuController() {
 
   // target elements with the "draggable" class
   interact('.draggable-2')
-  .draggable(dragConfig).dropzone(dropConfig).dropzone(dropConfig);
+  .draggable(dragConfig).allowFrom(".grab").dropzone(dropConfig).dropzone(dropConfig);
 
   interact('.dropzone1').dropzone(dropConfig);
 
