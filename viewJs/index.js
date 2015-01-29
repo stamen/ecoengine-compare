@@ -40,7 +40,7 @@ function IndexController() {
     function(pages) { //Progress
       console.log("Page recieved.", pages);
     });
-  }, 1000);
+  }, 10);
 
   setTimeout(function() {
     STMN.berkeley.requestRecursive("https://dev-ecoengine.berkeley.edu/api/observations/?format=geojson&selected_facets=genus_exact%3A%22tamias%22&q=&min_date=1930-12-30&max_date=1950-12-30&page_size=2000",
@@ -53,6 +53,27 @@ function IndexController() {
       hulllayer2.addTo(map);
 
       map.fitBounds(hulllayer2.getBounds());
+
+
+
+
+    },
+    function(pages) { //Progress
+      console.log("Page recieved.", pages);
+    });
+  }, 100);
+
+  setTimeout(function() {
+    STMN.berkeley.requestRecursive("https://dev-ecoengine.berkeley.edu/api/observations/?format=geojson&selected_facets=genus_exact%3A%22tamias%22&q=&min_date=1950-12-30&max_date=1970-12-30&page_size=2000",
+    function(pages) { //Done
+      //console.log("Done.", pages);
+
+      var hulllayer3 = STMN.hullLayer(pages, {
+        color : "green"
+      });
+      hulllayer3.addTo(map);
+
+      map.fitBounds(hulllayer3.getBounds());
 
 
 
