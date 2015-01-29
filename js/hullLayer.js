@@ -5,8 +5,12 @@ var group;
 function hullLayer(features, options) {
 
   group = new L.MarkerClusterGroup({
-    "sColor" : options.color
+    "sColor" : options.color,
+    singleMarkerMode: true,
+    spiderfyDistanceMultiplier: 0
   });
+
+  console.log(features.length, options.color);
 
   features.forEach(function(feature) {
     if (feature.geometry) {
@@ -17,9 +21,9 @@ function hullLayer(features, options) {
           "icon" : L.divIcon({className: "point-feature-icon point-feature-icon-" + options.color})
         }));
       }
-    });
+  });
 
-    return group;
+  return group;
 
 }
 

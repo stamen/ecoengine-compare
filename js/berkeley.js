@@ -51,9 +51,10 @@ function requestRecursive(uri, callback, progress) {
     } else {
 
       firstCallback(pages);
+      pages = [];
 
     }
-    
+
   });
 
 }
