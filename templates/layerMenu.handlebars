@@ -3,13 +3,12 @@
 <style>
 
 .dropzone {
-  background-color: #ccc;
-  border: dashed 4px transparent;
+  border: dashed 1px transparent;
   border-radius: 4px;
   padding: 10px;
-  width: 400px;
+  width: 300px;
   transition: background-color 0.3s, border-color 0.3s;
-  min-height:100px;
+  min-height:50px;
 
   z-index:1;
 }
@@ -19,7 +18,7 @@
 }
 
 .drop-target {
-  background-color: #29e;
+  background-color: #ccc;
 }
 
 .drag-drop {
@@ -27,15 +26,15 @@
   min-width: 40px;
   padding: 3px;
 
-  background-color: #99e;
-  border: solid 2px white;
+  background-color: #eee;
+  border: solid 1px 777 !important;
 
   -webkit-transform: translate(0px, 0px);
   transform: translate(0px, 0px);
 
   transition: background-color 0.3s;
 
-  width:400px;
+  width:280px;
 
   z-index:10;
 }
@@ -45,7 +44,7 @@
 
 .dragging .drag-drop {
   position:static;
-  width: 400px;
+  width: 280px;
 }
 
 .grab {

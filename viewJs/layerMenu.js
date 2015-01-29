@@ -57,10 +57,10 @@ function LayerMenuController() {
 
           if (dragPosState[0][1] < dragPosState[1][1]) {
             //dropZone.style.borderTop = "inset 3px black";
-            dropZone.style.borderBottom = "none";
+            dropZone.style.borderBottom = "solid 1px #777";
             dropZone.setAttribute("data-drop-direction","top");
           } else {
-            dropZone.style.borderTop = "none";
+            dropZone.style.borderTop = "solid 1px #777";
             //dropZone.style.borderBottom = "inset 3px black";
             dropZone.setAttribute("data-drop-direction","bottom");
           }
@@ -140,8 +140,8 @@ function LayerMenuController() {
 
     for (var i=0; dropzones.length > i; i++) {
       for (var ii=0; dropzones[i].children.length > ii; ii++) {
-        dropzones[i].children[ii].style.borderTop = "none";
-        dropzones[i].children[ii].style.borderBottom = "none";
+        dropzones[i].children[ii].style.borderTop = "solid 1px #777";
+        dropzones[i].children[ii].style.borderBottom = "solid 1px #777";
         dropzones[i].children[ii].setAttribute("data-drop-direction",null);
       }
     }
