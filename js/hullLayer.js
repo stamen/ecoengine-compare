@@ -6,7 +6,6 @@ function hullLayer(features, options) {
 
   group = new L.MarkerClusterGroup({
     "sColor" : options.color,
-    singleMarkerMode: true,
     spiderfyDistanceMultiplier: 0
   });
 
