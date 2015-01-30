@@ -18,6 +18,7 @@
   "dependencies": {
     "leaflet": "~0.7.3",
     "interact": "~1.2.2",
-    "samesies": "*"
+    "samesies": "*",
+    "browsersugar": "*"
   }
 }

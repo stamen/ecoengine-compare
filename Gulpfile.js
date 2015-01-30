@@ -95,7 +95,6 @@ gulp.task("lint", function() {
 });
 
 gulp.task("uglify", function() {
-  console.log("bower files", mainBowerFiles().filter(function(f) {return (f.substring(f.length-3) === ".js")}));
   gulp
     .src(mainBowerFiles().filter(function(f) {return (f.substring(f.length-3) === ".js")}).concat([paths.js]))
     .pipe(sourcemaps.init())
