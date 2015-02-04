@@ -96,7 +96,8 @@ function IndexController() {
 
 function LayerMenu() {
 
-  var rootNode = document.querySelector("#legend-layer-menu");
+  var rootNode      = document.querySelector("#legend-layer-menu"),
+      layerTemplate = "<li id=\"yes-drop\" class=\"draggable drag-drop\"> <div class=\"grab\"></div>{label}</li>";
 
   rootNode.classList.add("legend-layer-menu");
 
@@ -270,6 +271,18 @@ function LayerMenu() {
     return rootNode;
   }
 
+  function processTemplate(template, data) {
+
+      Object.keys(data).forEach(function(key) {
+
+        template = template.split("{" + key + "}").join(data[key]);
+
+      });
+
+      return template;
+
+  }
+
   // target elements with the "draggable" class
   interact('.draggable')
   .draggable(dragConfig).allowFrom(".grab").dropzone(dropConfig);
@@ -288,7 +301,7 @@ function LayerMenu() {
 
   for (var i=0; actions.length > i; i++) {
     actions[i].addEventListener("click", function(e) {
-      append(document.querySelector("." + e.target.getAttribute("data-for")), "<li id=\"yes-drop\" class=\"draggable drag-drop\" data-position=\"1\"> <div class=\"grab\"></div> Query </li>");
+      append(document.querySelector("." + e.target.getAttribute("data-for")), processTemplate(layerTemplate, {"label":"Fake Layer"}));
     });
   }
 
