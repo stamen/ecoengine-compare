@@ -1,72 +1,9 @@
 {{>header}}
 
-<style>
 
-.dropzone {
-  border: dashed 1px transparent;
-  border-radius: 4px;
-  padding: 10px;
-  width: 300px;
-  transition: background-color 0.3s, border-color 0.3s;
-  min-height:50px;
-
-  z-index:1;
-}
-
-.drop-active {
-  border-color: #333;
-}
-
-.drop-target {
-  background-color: #ccc;
-}
-
-.drag-drop {
-  display:inline-block;
-  min-width: 40px;
-  padding: 3px;
-
-  background-color: #eee;
-  border: solid 1px 777 !important;
-
-  -webkit-transform: translate(0px, 0px);
-  transform: translate(0px, 0px);
-
-  transition: background-color 0.3s;
-
-  width:280px;
-
-  z-index:10;
-}
-
-.drag-drop.can-drop {
-}
-
-.dragging .drag-drop {
-  position:static;
-  width: 280px;
-}
-
-.grab {
-  height:15px;
-  width:15px;
-  background-color:black;
-  display:inline-block;
-}
-</style>
 
 <div id="hash-display"></div>
 
-<h2>Point <button data-for="dropzone1" class="add-action">+</button></h2>
-<ul class="dropzone dropzone1">
-  <li id="yes-drop" class="draggable drag-drop" data-position="1"> <div class="grab"></div> Query </li>
-</ul>
-<h2>Polygon <button data-for="dropzone2" class="add-action">+</button></h2>
-<ul class="dropzone dropzone2">
-  <li id="yes-drop-2" class="draggable-2 drag-drop" data-position="1"> <div class="grab"></div> Query </li>
-</ul>
-<h2>Hexagon <button data-for="dropzone3" class="add-action">+</button></h2>
-<ul class="dropzone dropzone3">
-</ul>
+
 
 {{>footer}}

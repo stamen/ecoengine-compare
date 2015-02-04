@@ -98,7 +98,6 @@ gulp.task("uglify", function() {
   gulp
     .src(mainBowerFiles().filter(function(f) {return (f.substring(f.length-3) === ".js")}).concat([paths.js]))
     .pipe(sourcemaps.init())
-    .pipe(wrap("(function(STMN){<%= contents %>}(window.STMN));"))
     .pipe(concat('ecoengine-compare.js'))
     .pipe(gulp.dest(paths.publicJs))
     .pipe(uglify({
