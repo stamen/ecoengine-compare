@@ -12,6 +12,7 @@ cp .env.json.sample .env.json
 ```bash
 gulp dist
 scp -prq ./public/. studio.stamen.com:www/berkeley/show/compare/
+scp -prq ./public/. studio.stamen.com:www/berkeley/show/compare-[year]-[month]-[day]/
 ```
 
 Open [http://studio.stamen.com/berkeley/show/compare/](http://studio.stamen.com/berkeley/show/compare/)
