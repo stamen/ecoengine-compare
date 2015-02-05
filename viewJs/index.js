@@ -4,7 +4,7 @@ function IndexController() {
 
   var that   = this,
       layers = {},
-      baseLayer;
+      baseLayer, baseLayerAdded;
 
   function initMap() {
 
@@ -32,6 +32,15 @@ function IndexController() {
 
   }
 
+  function buildLayer(id, list, uri, pages) {
+
+    layers[list][id] = STMN.hullLayer(pages, {
+      color : "red"
+    });
+
+    layers[list][id].addTo(that.map);
+  }
+
   function showLayer(id, list, uri) {
 
     //
@@ -42,36 +51,45 @@ function IndexController() {
       layers[list] = {};
     }
 
-    if (typeof layers[list][id] !== "object") {
-      return STMN.ecoengineClient.requestRecursive(uri,
-      function(pages) { //Done
-
-        baseLayer.addTo(that.map);
-
-        layers[list][id] = STMN.hullLayer(pages, {
-          color : "red"
-        });
-
-        that.map.fitBounds(layers[list][id].getBounds());
-
-        layers[list][id].addTo(that.map);
-
-        that.fire("showLayer");
-
-      },
-      function(pages) { //Progress
-        console.log("Page recieved.", pages);
-      });
-    } else {
-      return layers[list][id].addTo(that.map);
+    if (typeof baseLayerAdded !== "boolean") {
+      baseLayer.addTo(that.map);
+      baseLayerAdded = true;
     }
+
+    return STMN.ecoengineClient.requestRecursive(uri,
+    function(pages) { //Done
+
+      if (typeof layers[list][id] === "object") {
+        that.map.removeLayer(layers[list][id]);
+        delete layers[list][id];
+      }
+
+      buildLayer(id, list, uri, pages);
+
+      that.map.fitBounds(layers[list][id].getBounds());
+
+      that.fire("showLayer");
+    },
+    function(pages) { //Progress
+
+      if (typeof layers[list][id] === "object") {
+        that.map.removeLayer(layers[list][id]);
+        delete layers[list][id];
+      }
+
+      buildLayer(id, list, uri, pages);
+
+      that.map.fitBounds(layers[list][id].getBounds());
+
+      that.fire("showLayer");
+    });
 
   }
 
   function hideLayer(id, list) {
 
     if (typeof layers[list] === "object" && typeof layers[list][id] === "object") {
-      layers[list][id].addTo(null);
+      that.map.removeLayer(layers[list][id]);
 
       that.fire("hideLayer");
 
@@ -96,10 +114,10 @@ function IndexController() {
   //
   // Console log some helpful test queries
   //
-  console.log("Here are some helpful test queries:");
-  console.log("https://dev-ecoengine.berkeley.edu/api/observations/?format=geojson&selected_facets=genus_exact%3A%22tamias%22&q=&min_date=1900-01-01&max_date=1930-12-30&page_size=2000");
-  console.log("https://dev-ecoengine.berkeley.edu/api/observations/?format=geojson&selected_facets=genus_exact%3A%22tamias%22&q=&min_date=1930-12-30&max_date=1950-12-30&page_size=2000");
-  console.log("https://dev-ecoengine.berkeley.edu/api/observations/?format=geojson&selected_facets=genus_exact%3A%22tamias%22&q=&min_date=1950-12-30&max_date=1970-12-30&page_size=2000");
+  //console.log("Here are some helpful test queries:");
+  //console.log("https://dev-ecoengine.berkeley.edu/api/observations/?format=geojson&selected_facets=genus_exact%3A%22tamias%22&q=&min_date=1900-01-01&max_date=1930-12-30&page_size=2000");
+  //console.log("https://dev-ecoengine.berkeley.edu/api/observations/?format=geojson&selected_facets=genus_exact%3A%22tamias%22&q=&min_date=1930-12-30&max_date=1950-12-30&page_size=2000");
+  //console.log("https://dev-ecoengine.berkeley.edu/api/observations/?format=geojson&selected_facets=genus_exact%3A%22tamias%22&q=&min_date=1950-12-30&max_date=1970-12-30&page_size=2000");
 
   return that;
 
@@ -113,8 +131,8 @@ function LayerMenu() {
 
   var that              = this,
       rootNode          = document.querySelector("#legend-layer-menu"),
-      layerTemplate     = "<li id=\"yes-drop\" class=\"draggable drag-drop\"> <div class=\"grab\"></div>{label}</li>",
-      inputFormTemplate = "<div class=\"input-form hidden\"><form class=\"input-form-element\" name=\"{layerid}-input-form\"><input type=\"text\" name=\"uri\" placeholder=\"EcoEngine API URI\" value=\"https://dev-ecoengine.berkeley.edu/api/observations/?format=geojson&selected_facets=genus_exact%3A%22tamias%22&q=&min_date=1930-12-30&max_date=1950-12-30&page_size=2000\"><input type=\"text\" name=\"label\" placeholder=\"A name for this layer\"><button>Add</button></form></div>";
+      layerTemplate     = "<li id=\"yes-drop\" class=\"draggable drag-drop layer-item-{id}\" data-id=\"{id}\"> <div class=\"grab\"></div>{label}</li>",
+      inputFormTemplate = "<div class=\"input-form hidden\"><form class=\"input-form-element\" name=\"{layerid}-input-form\"><input type=\"text\" name=\"uri\" placeholder=\"EcoEnginwel API URI\" value=\"https://dev-ecoengine.berkeley.edu/api/observations/?format=geojson&selected_facets=genus_exact%3A%22tamias%22&q=&min_date=1920-12-30&max_date=1970-12-30&page_size=2000\"><input type=\"text\" name=\"label\" placeholder=\"A name for this layer\"><button>Add</button></form></div>";
 
   rootNode.classList.add("legend-layer-menu");
 
@@ -350,6 +368,10 @@ function LayerMenu() {
     inputFormNode.classList.remove("hidden");
   }
 
+  function getLayerNode() {
+
+  }
+
   // target elements with the "draggable" class
   interact('.draggable')
   .draggable(dragConfig).allowFrom(".grab").dropzone(dropConfig);
@@ -383,7 +405,7 @@ function LayerMenu() {
           "list"  : e.target.getAttribute("data-for"),
           "label" : formNode["label"].value,
           "uri"   : formNode["uri"].value,
-          "id"   : e.target.getAttribute("data-for") + formNode["label"].value.toLowerCase().replace(/\s/g,"&")
+          "id"    : e.target.getAttribute("data-for") + formNode["label"].value.toLowerCase().replace(/\s/g,"&")
         });
       });
     });
