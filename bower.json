@@ -19,7 +19,7 @@
     "leaflet": "~0.7.3",
     "interact": "~1.2.2",
     "samesies": "*",
-    "browsersugar": "*",
-    "leaflet-hexbin": "~0.2.6"
+    "leaflet-hexbin": "~0.2.6",
+    "leaflet-convex-hull-cluster": "git@github.com:standardpixel/Leaflet.markercluster.git#master"
   }
 }
