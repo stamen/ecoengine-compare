@@ -25,3 +25,76 @@ body {
     background-color:red;
   }
 }
+body {
+  font-family: 'Ubuntu', sans-serif;
+  line-height:1.5em;
+  font-size:14px;
+}
+#map {
+  background-color:transparent;
+}
+
+#map-instruction {
+  position:absolute;
+  top:20%;
+  left:40%;
+  width:200px;
+  text-align:center;
+  color:#aaa;
+  font-size:125%;
+}
+
+#legend-layer-menu {
+  position:absolute;
+  top:10px;
+  right:10px;
+  border:solid 1px #aaa;
+  width:300px;
+  padding:10px;
+  background-color:#fff;
+}
+
+#legend-layer-menu .content-container {
+  position:relative;
+}
+
+.leaflet-bar {
+  box-shadow:none;
+  border-radius:0;
+  border:solid 1px #aaa;
+}
+
+button {
+  border-radius:0;
+  border:solid 1px #aaa;
+  background-color:white;
+  padding:5px 10px;
+}
+
+button:hover {
+  background-color:rgb(103,171,236);
+  color:white;
+  cursor:pointer;
+}
+
+#legend-layer-menu .content-container h2 {
+  position:relative;
+}
+
+.hidden {
+  display:none;
+}
+
+.input-form {
+  position:absolute;
+  top:0;
+  left:0;
+  background-color:white;
+  border:solid 1px #aaa;
+  box-shadow:1px 1px 1px rgba(0,0,0,.4);
+  padding:10px;
+}
+.input-form input {
+  width:100px;
+  margin-right:10px;
+}
