@@ -87,7 +87,9 @@ gulp.task("lint", function() {
         "window",
         "history",
         "L",
-        "STMN"
+        "STMN",
+        "STPX",
+        "interact"
       ],
       expr: true
     }))
