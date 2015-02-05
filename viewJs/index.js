@@ -9,7 +9,9 @@ function IndexController() {
   function initMap() {
 
     // create a map in the "map" div, set the view to a given place and zoom
-    that.map = L.map("map").setView([37.5333, -77.4667], 7);
+    that.map = L.map("map", {
+      "minZoom" : 2
+    }).setView([37.5333, -77.4667], 7);
 
     //
     // Add base-layer
