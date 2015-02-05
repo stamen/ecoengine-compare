@@ -3,6 +3,7 @@
 ## Setup
 
 ```bash
+gem install sass
 npm install
 cp .env.json.sample .env.json
 ```
