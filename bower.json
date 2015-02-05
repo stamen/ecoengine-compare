@@ -21,6 +21,7 @@
     "samesies": "*",
     "leaflet-hexbin": "~0.2.6",
     "leaflet-convex-hull-cluster": "git@github.com:standardpixel/Leaflet.markercluster.git#master",
-    "leaflet-client": "git@github.com:stamen/ecoengine-client.git#master"
+    "leaflet-client": "git@github.com:stamen/ecoengine-client.git#master",
+    "legend-layer-menu": "git@github.com:stamen/legend-layer-menu.git#master"
   }
 }

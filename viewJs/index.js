@@ -139,7 +139,7 @@ function IndexController() {
 
 var index = new (STPX.samesies.extend(IndexController))();
 
-var LayerMenu = new STMN.LayerMenu();
+var LayerMenu = new STMN.LegendLayerMenu("#legend-layer-menu");
 
 LayerMenu.on("layerAdded", function (e) {
   index.showLayer(
