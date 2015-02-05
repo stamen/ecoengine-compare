@@ -80,7 +80,7 @@ function IndexController() {
 
       buildLayer(id, list, uri, pages);
 
-      that.map.fitBounds(layers[list][id].getBounds());
+      that.map.fitWorld();
 
       that.fire("showLayer");
     },
@@ -93,7 +93,7 @@ function IndexController() {
 
       buildLayer(id, list, uri, pages);
 
-      that.map.fitBounds(layers[list][id].getBounds());
+      that.map.fitWorld();
 
       that.fire("showLayer");
     });
