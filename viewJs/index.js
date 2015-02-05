@@ -34,11 +34,20 @@ function IndexController() {
 
   }
 
+  var dropZoneLayers = {
+    "dropzone1": function(pages) {
+
+    },
+    "dropzone2": STMN.hullLayer, 
+    "dropzone3": function(pages) {
+    }
+  };
+
   function buildLayer(id, list, uri, pages) {
 
     console.log("Args",arguments);
 
-    layers[list][id] = STMN.hullLayer(pages, {
+    layers[list][id] = dropZoneLayers[list](pages, {
       color : "red"
     });
 
