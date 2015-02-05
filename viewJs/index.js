@@ -58,7 +58,7 @@ function IndexController() {
       baseLayerAdded = true;
     }
 
-    return STMN.ecoengineClient.requestRecursive(uri,
+    return (new STMN.EcoengineClient).requestRecursive(uri,
     function(pages) { //Done
 
       if (typeof layers[list][id] === "object") {
