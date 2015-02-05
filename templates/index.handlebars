@@ -82,6 +82,7 @@ body {
   border:solid 1px #aaa;
   width:300px;
   padding:10px;
+  background-color:#fff;
 }
 
 #legend-layer-menu .content-container {
@@ -92,6 +93,41 @@ body {
   box-shadow:none;
   border-radius:0;
   border:solid 1px #aaa;
+}
+
+button {
+  border-radius:0;
+  border:solid 1px #aaa;
+  background-color:white;
+  padding:5px 10px;
+}
+
+button:hover {
+  background-color:rgb(103,171,236);
+  color:white;
+  cursor:pointer;
+}
+
+#legend-layer-menu .content-container h2 {
+  position:relative;
+}
+
+.hidden {
+  display:none;
+}
+
+.input-form {
+  position:absolute;
+  top:0;
+  left:0;
+  background-color:white;
+  border:solid 1px #aaa;
+  box-shadow:1px 1px 1px rgba(0,0,0,.4);
+  padding:10px;
+}
+.input-form input {
+  width:100px;
+  margin-right:10px;
 }
 </style>
 
@@ -106,7 +142,6 @@ body {
   <div class="content-container">
     <h2>Point <button data-for="dropzone1" class="add-action">+</button></h2>
     <ul class="dropzone dropzone1">
-      <!--li id="yes-drop" class="draggable drag-drop" data-position="1"> <div class="grab"></div> Query </li-->
     </ul>
     <h2>Polygon <button data-for="dropzone2" class="add-action">+</button></h2>
     <ul class="dropzone dropzone2">

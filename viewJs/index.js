@@ -2,21 +2,91 @@
 
 function IndexController() {
 
-  var map;
+  var that   = this,
+      layers = {},
+      baseLayer;
 
   function initMap() {
 
     // create a map in the "map" div, set the view to a given place and zoom
-    map = L.map("map").setView([37.5333, -77.4667], 7);
+    that.map = L.map("map").setView([37.5333, -77.4667], 7);
 
-    /*
-    // add an OpenStreetMap tile layer
-    L.tileLayer("http://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png", {
+    //
+    // Add base-layer
+    //
+    baseLayer = L.tileLayer("http://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png", {
       attribution: "&copy; <a href=\"http://osm.org/copyright\">OpenStreetMap</a> contributors"
-    }).addTo(map);
-    */
+    });
+
+    //
+    // Control base-layer visibility
+    //
+    that.on("showLayer", function() {
+      console.log("show layer");
+      document.querySelector("#map-instruction").style.opacity = 0;
+    });
+
+    that.on("hideLayer", function() {
+      console.log("hide layer");
+    });
 
   }
+
+  function showLayer(id, list, uri) {
+
+    //
+    // Add an object to the layer cache for
+    // this list if it does not already exist
+    //
+    if (typeof layers[list] !== "object") {
+      layers[list] = {};
+    }
+
+    if (typeof layers[list][id] !== "object") {
+      return STMN.ecoengineClient.requestRecursive(uri,
+      function(pages) { //Done
+
+        baseLayer.addTo(that.map);
+
+        layers[list][id] = STMN.hullLayer(pages, {
+          color : "red"
+        });
+
+        that.map.fitBounds(layers[list][id].getBounds());
+
+        layers[list][id].addTo(that.map);
+
+        that.fire("showLayer");
+
+      },
+      function(pages) { //Progress
+        console.log("Page recieved.", pages);
+      });
+    } else {
+      return layers[list][id].addTo(that.map);
+    }
+
+  }
+
+  function hideLayer(id, list) {
+
+    if (typeof layers[list] === "object" && typeof layers[list][id] === "object") {
+      layers[list][id].addTo(null);
+
+      that.fire("hideLayer");
+
+      return true;
+    } else {
+      return false;
+    }
+
+  }
+
+  //
+  // Public interface
+  //
+  that.showLayer = showLayer;
+  that.hideLayer = hideLayer;
 
   //
   // Init
@@ -88,16 +158,20 @@ function IndexController() {
   }, 1000);
   */
 
+  return that;
+
 }
 
-(new IndexController());
+var index = new (STPX.samesies.extend(IndexController))();
 
 "use strict";
 
 function LayerMenu() {
 
-  var rootNode      = document.querySelector("#legend-layer-menu"),
-      layerTemplate = "<li id=\"yes-drop\" class=\"draggable drag-drop\"> <div class=\"grab\"></div>{label}</li>";
+  var that              = this,
+      rootNode          = document.querySelector("#legend-layer-menu"),
+      layerTemplate     = "<li id=\"yes-drop\" class=\"draggable drag-drop\"> <div class=\"grab\"></div>{label}</li>",
+      inputFormTemplate = "<div class=\"input-form hidden\"><form class=\"input-form-element\" name=\"{layerid}-input-form\"><input type=\"text\" name=\"uri\" placeholder=\"EcoEngine API URI\"><input type=\"text\" name=\"label\" placeholder=\"A name for this layer\"><button>Add</button></form></div>";
 
   rootNode.classList.add("legend-layer-menu");
 
@@ -271,6 +345,23 @@ function LayerMenu() {
     return rootNode;
   }
 
+  function parentHasClass(startingElement, className, depth) {
+
+    var last  = startingElement;
+
+    for (var i=0; (depth||10) > i && last; i++) {
+
+      if (last && last.className && last.className.indexOf(className) > -1) {
+        return last;
+      }
+
+      last = last.parentNode;
+
+    }
+
+    return null;
+  }
+
   function processTemplate(template, data) {
 
       Object.keys(data).forEach(function(key) {
@@ -281,6 +372,39 @@ function LayerMenu() {
 
       return template;
 
+  }
+
+  function promptUserForLayerData(buttonNode, callback) {
+
+    var inputFormNode = buttonNode.parentNode.querySelector(".input-form");
+
+    //
+    // Add input form for this menu group if it
+    // does not already exist
+    //
+    if (!inputFormNode) {
+      append(buttonNode.parentNode, processTemplate(inputFormTemplate, {
+        "layerid" : buttonNode.getAttribute("data-for")
+      }));
+      inputFormNode = buttonNode.parentNode.querySelector(".input-form");
+
+      inputFormNode.querySelector("button").addEventListener("click", function(e) {
+
+        e.preventDefault();
+
+        e.target.parentNode.parentNode.classList.add("hidden");
+
+        if (typeof callback === "function") {
+          callback()
+        }
+
+      }, false);
+    }
+
+    //
+    // Show the form
+    //
+    inputFormNode.classList.remove("hidden");
   }
 
   // target elements with the "draggable" class
@@ -301,10 +425,37 @@ function LayerMenu() {
 
   for (var i=0; actions.length > i; i++) {
     actions[i].addEventListener("click", function(e) {
-      append(document.querySelector("." + e.target.getAttribute("data-for")), processTemplate(layerTemplate, {"label":"Fake Layer"}));
+      promptUserForLayerData(e.target, function() {
+        var formNode = e.target.parentNode.querySelector("form");
+
+        append(
+          document.querySelector("." + e.target.getAttribute("data-for")),
+          processTemplate(layerTemplate, {
+            "label"   : formNode["label"].value,
+            "layerid" : e.target.getAttribute("data-for")
+          })
+        );
+
+        that.fire("layerAdded", {
+          "list"  : e.target.getAttribute("data-for"),
+          "label" : formNode["label"].value,
+          "uri"   : formNode["uri"].value,
+          "id"   : e.target.getAttribute("data-for") + formNode["label"].value.toLowerCase().replace(/\s/g,"&")
+        });
+      });
     });
   }
 
+  return that;
+
 }
 
-(new LayerMenu());
+var LayerMenu = new (STPX.samesies.extend(LayerMenu))();
+
+LayerMenu.on("layerAdded", function (e) {
+  index.showLayer(
+    e.caller.id,
+    e.caller.list,
+    e.caller.uri
+  );
+});
