@@ -40,6 +40,7 @@ function IndexController() {
     },
     "dropzone2": STMN.hullLayer, 
     "dropzone3": function(pages) {
+      return new HexbinLayer();
     }
   };
 
@@ -51,7 +52,7 @@ function IndexController() {
       color : "red"
     });
 
-    layers[list][id].addTo(that.map);
+    that.map.addLayer(layers[list][id]);
   }
 
   function showLayer(id, list, uri) {
