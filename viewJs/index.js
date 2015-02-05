@@ -114,7 +114,7 @@ function LayerMenu() {
   var that              = this,
       rootNode          = document.querySelector("#legend-layer-menu"),
       layerTemplate     = "<li id=\"yes-drop\" class=\"draggable drag-drop\"> <div class=\"grab\"></div>{label}</li>",
-      inputFormTemplate = "<div class=\"input-form hidden\"><form class=\"input-form-element\" name=\"{layerid}-input-form\"><input type=\"text\" name=\"uri\" placeholder=\"EcoEngine API URI\"><input type=\"text\" name=\"label\" placeholder=\"A name for this layer\"><button>Add</button></form></div>";
+      inputFormTemplate = "<div class=\"input-form hidden\"><form class=\"input-form-element\" name=\"{layerid}-input-form\"><input type=\"text\" name=\"uri\" placeholder=\"EcoEngine API URI\" value=\"https://dev-ecoengine.berkeley.edu/api/observations/?format=geojson&selected_facets=genus_exact%3A%22tamias%22&q=&min_date=1930-12-30&max_date=1950-12-30&page_size=2000\"><input type=\"text\" name=\"label\" placeholder=\"A name for this layer\"><button>Add</button></form></div>";
 
   rootNode.classList.add("legend-layer-menu");
 
