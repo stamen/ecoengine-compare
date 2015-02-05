@@ -103,9 +103,8 @@ function IndexController() {
   //
   // Public interface
   //
-  that.showLayer    = showLayer;
-  that.hideLayer    = hideLayer;
-  that.getLayerNode = getLayerNode;
+  that.showLayer = showLayer;
+  that.hideLayer = hideLayer;
 
   //
   // Init

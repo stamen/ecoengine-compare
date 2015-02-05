@@ -287,6 +287,11 @@
       actions[i].addEventListener("click", onClick);
     }
 
+    //
+    // Public interface
+    //
+    that.getLayerNode = getLayerNode;
+
     return that;
 
   }
