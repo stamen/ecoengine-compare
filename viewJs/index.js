@@ -34,6 +34,8 @@ function IndexController() {
 
   function buildLayer(id, list, uri, pages) {
 
+    console.log("Args",arguments);
+
     layers[list][id] = STMN.hullLayer(pages, {
       color : "red"
     });
