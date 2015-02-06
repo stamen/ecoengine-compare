@@ -19,10 +19,10 @@
     "leaflet": "~0.7.3",
     "interact": "~1.2.2",
     "samesies": "*",
-    "leaflet-hexbin": "~0.2.6",
     "leaflet-convex-hull-cluster": "git@github.com:standardpixel/Leaflet.markercluster.git#master",
     "leaflet-client": "git@github.com:stamen/ecoengine-client.git#master",
     "legend-layer-menu": "git@github.com:stamen/legend-layer-menu.git#master",
-    "browsersugar": "*"
+    "browsersugar": "*",
+    "leaflet-hexbin-2": "*"
   }
 }
