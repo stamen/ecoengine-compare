@@ -4,7 +4,16 @@ function IndexController() {
 
   var that   = this,
       layers = {},
-      baseLayer, baseLayerAdded;
+      dropZoneLayers = {
+        "dropzone1": function(pages) {
+
+        },
+        "dropzone2": STMN.hullLayer,
+        "dropzone3": function(pages) {
+          return new HexbinLayer();
+        }
+      },
+      baseLayer, baseLayerAdded, layerMenu;
 
   function initMap() {
 
@@ -34,33 +43,34 @@ function IndexController() {
 
   }
 
-  var dropZoneLayers = {
-    "dropzone1": function(pages) {
+  function initLayerMenu() {
+    layerMenu = new STMN.LegendLayerMenu("#legend-layer-menu");
 
-    },
-    "dropzone2": STMN.hullLayer,
-    "dropzone3": function(pages) {
-      return new HexbinLayer();
-    }
-  };
+    layerMenu.on("layerAdded", function (e) {
 
-  function buildLayer(id, list, uri, pages) {
+      showMenuItemLoadState();
+      that.showLayer(e.caller); //Passing a layer object
 
-    layers[list][id] = dropZoneLayers[list](pages, {
+    });
+  }
+
+  function buildLayer(layerObject, pages) {
+
+    layers[layerObject.list][layerObject.id] = dropZoneLayers[layerObject.list](pages, {
       color : "red"
     });
 
-    that.map.addLayer(layers[list][id]);
+    that.map.addLayer(layers[layerObject.list][layerObject.id]);
   }
 
-  function showLayer(id, list, uri) {
+  function showLayer(layerObject) {
 
     //
     // Add an object to the layer cache for
     // this list if it does not already exist
     //
-    if (typeof layers[list] !== "object") {
-      layers[list] = {};
+    if (typeof layers[layerObject.list] !== "object") {
+      layers[layerObject.list] = {};
     }
 
     if (typeof baseLayerAdded !== "boolean") {
@@ -68,32 +78,36 @@ function IndexController() {
       baseLayerAdded = true;
     }
 
-    return (new STMN.EcoengineClient).requestRecursive(uri,
+    return (new STMN.EcoengineClient).requestRecursive(layerObject.uri,
     function(pages) { //Done
 
-      if (typeof layers[list][id] === "object") {
-        that.map.removeLayer(layers[list][id]);
-        delete layers[list][id];
+      if (typeof layers[layerObject.list][layerObject.id] === "object") {
+        that.map.removeLayer(layers[layerObject.list][layerObject.id]);
+        delete layers[layerObject.list][layerObject.id];
       }
 
-      buildLayer(id, list, uri, pages);
+      buildLayer(layerObject, pages);
 
       that.map.fitWorld();
 
       that.fire("showLayer");
+
+      if (typeof callback === "function") {
+        callback();
+      }
     },
     function(pages) { //Progress
 
-      if (typeof layers[list][id] === "object") {
-        that.map.removeLayer(layers[list][id]);
-        delete layers[list][id];
+      if (typeof layers[layerObject.list][layerObject.id] === "object") {
+        that.map.removeLayer(layers[layerObject.list][layerObject.id]);
+        delete layers[layerObject.list][layerObject.id];
       }
 
-      buildLayer(id, list, uri, pages);
+      buildLayer(layerObject, pages);
 
       that.map.fitWorld();
 
-      that.fire("showLayer");
+      that.fire("showLayerProgress");
     });
 
   }
@@ -112,37 +126,30 @@ function IndexController() {
 
   }
 
+  function showMenuItemLoadState() {
+
+  }
+
+  function hideMenuItemLoadState() {
+
+  }
+
   //
   // Public interface
   //
   that.showLayer = showLayer;
   that.hideLayer = hideLayer;
+  that.showMenuItemLoadState = showMenuItemLoadState;
+  that.hideMenuItemLoadState = hideMenuItemLoadState;
 
   //
   // Init
   //
   initMap();
-
-  //
-  // Console log some helpful test queries
-  //
-  //console.log("Here are some helpful test queries:");
-  //console.log("https://dev-ecoengine.berkeley.edu/api/observations/?format=geojson&selected_facets=genus_exact%3A%22tamias%22&q=&min_date=1900-01-01&max_date=1930-12-30&page_size=2000");
-  //console.log("https://dev-ecoengine.berkeley.edu/api/observations/?format=geojson&selected_facets=genus_exact%3A%22tamias%22&q=&min_date=1930-12-30&max_date=1950-12-30&page_size=2000");
-  //console.log("https://dev-ecoengine.berkeley.edu/api/observations/?format=geojson&selected_facets=genus_exact%3A%22tamias%22&q=&min_date=1950-12-30&max_date=1970-12-30&page_size=2000");
+  initLayerMenu();
 
   return that;
 
 }
 
-var index = new (STPX.samesies.extend(IndexController))();
-
-var LayerMenu = new STMN.LegendLayerMenu("#legend-layer-menu");
-
-LayerMenu.on("layerAdded", function (e) {
-  index.showLayer(
-    e.caller.id,
-    e.caller.list,
-    e.caller.uri
-  );
-});
+(new (STPX.samesies.extend(IndexController))());
