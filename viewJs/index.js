@@ -38,15 +38,13 @@ function IndexController() {
     "dropzone1": function(pages) {
 
     },
-    "dropzone2": STMN.hullLayer, 
+    "dropzone2": STMN.hullLayer,
     "dropzone3": function(pages) {
       return new HexbinLayer();
     }
   };
 
   function buildLayer(id, list, uri, pages) {
-
-    console.log("Args",arguments);
 
     layers[list][id] = dropZoneLayers[list](pages, {
       color : "red"
