@@ -26,7 +26,7 @@ function IndexController() {
     that.map = L.map("map", {
       "minZoom" : 2,
       "scrollWheelZoom" : false
-    }).setView([37.5333, -77.4667], 7);
+    }).setView([37.5333, -77.4667], 2);
 
     //
     // Add base-layer
