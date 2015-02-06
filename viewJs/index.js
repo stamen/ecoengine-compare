@@ -15,6 +15,11 @@ function IndexController() {
       },
       baseLayer, baseLayerAdded, layerMenu;
 
+  //
+  // Convenience methods for browsers
+  //
+  that.utils = STPX.browsersugar.mix({});
+
   function initMap() {
 
     // create a map in the "map" div, set the view to a given place and zoom
@@ -43,12 +48,23 @@ function IndexController() {
 
   }
 
+  function showMenuItemLoadState(layer) {
+
+    var layerNode = layerMenu.getLayerNode(layer);
+
+    that.utils.append(layerNode, "<img src=\"https://i0.wp.com/cdnjs.cloudflare.com/ajax/libs/fancybox/2.1.5/fancybox_loading.gif\">");
+  }
+
+  function hideMenuItemLoadState(layer) {
+
+  }
+
   function initLayerMenu() {
     layerMenu = new STMN.LegendLayerMenu("#legend-layer-menu");
 
     layerMenu.on("layerAdded", function (e) {
 
-      showMenuItemLoadState();
+      showMenuItemLoadState(e.caller);
       that.showLayer(e.caller); //Passing a layer object
 
     });
@@ -123,14 +139,6 @@ function IndexController() {
     } else {
       return false;
     }
-
-  }
-
-  function showMenuItemLoadState() {
-
-  }
-
-  function hideMenuItemLoadState() {
 
   }
 
