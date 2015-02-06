@@ -53,11 +53,16 @@ function IndexController() {
 
     var layerNode = layerMenu.getLayerNode(layer);
 
-    that.utils.append(layerNode, "<img src=\"https://i0.wp.com/cdnjs.cloudflare.com/ajax/libs/fancybox/2.1.5/fancybox_loading.gif\">");
+    that.utils.append(layerNode, "<img class=\"loading\" src=\"https://i0.wp.com/cdnjs.cloudflare.com/ajax/libs/fancybox/2.1.5/fancybox_loading.gif\">");
   }
 
   function hideMenuItemLoadState(layer) {
+    var layerNode   = layerMenu.getLayerNode(layer),
+        loadingNode = layerNode.querySelector(".loading");
 
+    if (loadingNode) {
+      loadingNode.parentNode.removeChild(loadingNode);
+    }
   }
 
   function initLayerMenu() {
@@ -65,8 +70,12 @@ function IndexController() {
 
     layerMenu.on("layerAdded", function (e) {
 
-      showMenuItemLoadState(e.caller);
-      that.showLayer(e.caller); //Passing a layer object
+      var layer = e.caller;
+
+      showMenuItemLoadState(layer);
+      that.showLayer(layer, function() {
+        hideMenuItemLoadState(layer);
+      }); //Passing a layer object
 
     });
   }
@@ -80,7 +89,7 @@ function IndexController() {
     that.map.addLayer(layers[layerObject.list][layerObject.id]);
   }
 
-  function showLayer(layerObject) {
+  function showLayer(layerObject, callback) {
 
     //
     // Add an object to the layer cache for
