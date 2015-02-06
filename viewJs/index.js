@@ -24,7 +24,8 @@ function IndexController() {
 
     // create a map in the "map" div, set the view to a given place and zoom
     that.map = L.map("map", {
-      "minZoom" : 2
+      "minZoom" : 2,
+      "scrollWheelZoom" : false
     }).setView([37.5333, -77.4667], 7);
 
     //
