@@ -6,11 +6,18 @@ function IndexController() {
       layers = {},
       dropZoneLayers = {
         "dropzone1": function(pages) {
-
+          var hex = new L.HexbinLayer({
+                  radius : 1,
+                  opacity: 1
+              }).addTo(that.map);
+          hex.data(pages.filter(function(p){return (typeof p.geometry === "object" && p.geometry !== null)}).map(function(p) {return p.geometry.coordinates;}));
+          return hex;
         },
         "dropzone2": STMN.hullLayer,
         "dropzone3": function(pages) {
-          return new HexbinLayer();
+          var hex = new L.HexbinLayer().addTo(that.map);
+          hex.data(pages.filter(function(p){return (typeof p.geometry === "object" && p.geometry !== null)}).map(function(p) {return p.geometry.coordinates;}));
+          return hex;
         }
       },
       baseLayer, baseLayerAdded, layerMenu;

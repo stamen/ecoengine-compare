@@ -23,6 +23,6 @@
     "leaflet-client": "git@github.com:stamen/ecoengine-client.git#master",
     "legend-layer-menu": "git@github.com:stamen/legend-layer-menu.git#master",
     "browsersugar": "*",
-    "leaflet-hexbin-2": "*"
+    "leaflet-hexbin-2": "git@github.com:syntagmatic/leaflet-hexbin.git"
   }
 }
