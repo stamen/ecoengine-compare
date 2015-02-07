@@ -5,7 +5,7 @@ function IndexController() {
   var that   = this,
       layers = {},
       dropZoneLayers = {
-        "dropzone1": function(pages) {
+        "pointlayer": function(pages) {
           var hex = new L.HexbinLayer({
                   radius : 1,
                   opacity: 1
@@ -13,8 +13,8 @@ function IndexController() {
           hex.data(pages.filter(function(p){return (typeof p.geometry === "object" && p.geometry !== null)}).map(function(p) {return p.geometry.coordinates;}));
           return hex;
         },
-        "dropzone2": STMN.hullLayer,
-        "dropzone3": function(pages) {
+        "hulllayer": STMN.hullLayer,
+        "hexlayer": function(pages) {
           var hex = new L.HexbinLayer().addTo(that.map);
           hex.data(pages.filter(function(p){return (typeof p.geometry === "object" && p.geometry !== null)}).map(function(p) {return p.geometry.coordinates;}));
           return hex;
@@ -121,8 +121,6 @@ function IndexController() {
 
       buildLayer(layerObject, pages);
 
-      that.map.fitWorld();
-
       that.fire("showLayer");
 
       if (typeof callback === "function") {
@@ -137,8 +135,6 @@ function IndexController() {
       }
 
       buildLayer(layerObject, pages);
-
-      that.map.fitWorld();
 
       that.fire("showLayerProgress");
     });
