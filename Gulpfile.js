@@ -107,6 +107,9 @@ gulp.task("uglify", function() {
       output: {
         beautify: false
       }
+    }).on("error", function(e) {
+      console.log("Uglify error:\x07",e.message, " on line: ", e.lineNumber);
+      return this.end();
     }))
     .pipe(rename({extname: ".min.js"}))
     .pipe(sourcemaps.write("./")) // Write a sourcemap for browser debugging
@@ -188,13 +191,13 @@ gulp.task("vendor-css", function() {
 // Watch directories for changes
 //
 gulp.task("watch", function() {
-  gulp.watch(mainBowerFiles().concat([paths.js, paths.viewJs]),["lint", "uglify", "uglifyViewJs"]);
+  gulp.watch(mainBowerFiles("**/*.js").concat([paths.js, paths.viewJs]),["lint", "uglify", "uglifyViewJs"]);
   console.log("watching directory:", paths.js);
 
   gulp.watch(paths.templates, ["set-env","templates"]);
   console.log("watching directory:", paths.templates);
 
-  gulp.watch("sass/*.scss", ["sass"]);
+  gulp.watch(mainBowerFiles("**/.css").concat(["sass/*.scss"]), ["sass"]);
   console.log("watching directory:", paths.sass);
 
   gulp.start("webserver");
