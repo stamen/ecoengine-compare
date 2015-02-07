@@ -98,7 +98,7 @@ gulp.task("lint", function() {
 
 gulp.task("uglify", function() {
   gulp
-    .src(mainBowerFiles().filter(function(f) {return (f.substring(f.length-3) === ".js")}).concat([paths.js]))
+    .src(mainBowerFiles("**/*.js").concat([paths.js]))
     .pipe(sourcemaps.init())
     .pipe(concat('ecoengine-compare.js'))
     .pipe(gulp.dest(paths.publicJs))
@@ -179,7 +179,7 @@ gulp.task("sass", function () {
 
 gulp.task("vendor-css", function() {
   gulp
-  .src(mainBowerFiles().filter(function(f) {return (f.substring(f.length-4) === ".css")}))
+  .src(mainBowerFiles("**/*.css"))
   .pipe(concat("vendor.css"))
   .pipe(gulp.dest(paths.css));
 });
@@ -188,7 +188,7 @@ gulp.task("vendor-css", function() {
 // Watch directories for changes
 //
 gulp.task("watch", function() {
-  gulp.watch([paths.js, paths.viewJs], ["lint", "uglify", "uglifyViewJs"]);
+  gulp.watch(mainBowerFiles().concat([paths.js, paths.viewJs]),["lint", "uglify", "uglifyViewJs"]);
   console.log("watching directory:", paths.js);
 
   gulp.watch(paths.templates, ["set-env","templates"]);
