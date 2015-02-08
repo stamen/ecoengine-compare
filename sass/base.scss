@@ -43,6 +43,89 @@ body {
   text-align:center;
   color:#fff;
   font-size:125%;
+
+  display:block;
+  @media (max-width: 720px) {
+    display:none;
+  }
+}
+
+#legend-layer-menu-min {
+  display:block;
+  background-color:#fff;
+  border:solid 1px #aaa;
+  width:21px;
+  height:15px;
+  position:absolute;
+  top:10px;
+  right:10px;
+  padding:10px;
+  cursor:pointer;
+
+  &:hover {
+    background-color:rgb(103,171,236);
+  }
+
+  svg {
+    width:28px;
+    margin:-1px 0 0 -5px;
+  }
+
+  display:none;
+  @media (max-width: 720px) {
+    display:block;
+  }
+}
+
+#legend-layer-menu {
+
+  display:block;
+  @media (max-width: 720px) {
+    display:none;
+  }
+}
+
+#legend-layer-menu {
+
+  background-color:rgba(256,256,256,.7);
+
+  .close-button {
+    display:none;
+  }
+
+  display:block;
+  @media (max-width: 720px) {
+    display:none;
+
+    &.open {
+      display:block;
+      top:0;
+      right:0;
+      bottom:0;
+      left:0;
+      width:100vw;
+      z-index: 1000;
+    }
+
+    .close-button {
+      display:block;
+      width:25px;
+      position:absolute;
+      top:10px;
+      right:29px;
+      cursor:pointer;
+
+      circle, line {
+        stroke:#000;
+      }
+
+      &:hover {
+        circle, line {
+          stroke:rgb(103,171,236);
+        }
+      }
+    }
+  }
 }
 
 .leaflet-bar {

@@ -73,8 +73,14 @@ function IndexController() {
   }
 
   function initLayerMenu() {
+    var layerMinNode    = document.querySelector("#legend-layer-menu-min"),
+        layerPanelClose = document.querySelector("#legend-layer-menu .close-button");
+
     layerMenu = new STMN.LegendLayerMenu("#legend-layer-menu");
 
+    //
+    // when a layer is added, put it on the map
+    //
     layerMenu.on("layerAdded", function (e) {
 
       var layer = e.caller;
@@ -85,6 +91,31 @@ function IndexController() {
       }); //Passing a layer object
 
     });
+
+    //
+    // In mobile view there is a button to open the layermenu
+    // this opens it
+    //
+    layerMinNode.addEventListener("click", function(e) {
+
+      if (!layerMenu.rootNode.classList.contains("open")) {
+        layerMenu.rootNode.classList.add("open");
+      } else {
+        layerMenu.rootNode.classList.remove("open");
+      }
+
+    }, false);
+
+    //
+    // In mobile view there is a button to open the layermenu
+    // this closes it
+    //
+    layerPanelClose.addEventListener("click", function(e) {
+
+      layerMenu.rootNode.classList.remove("open");
+
+    }, false);
+
   }
 
   function buildLayer(layerObject, pages) {
