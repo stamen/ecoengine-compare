@@ -2,8 +2,9 @@
 
 function IndexController() {
 
-  var that   = this,
-      layers = {},
+  var that           = this,
+      layers         = {},
+      layerDataCache = {},
       dropZoneLayers = {
         "pointlayer": function(pages) {
           var hex = new L.HexbinLayer({
@@ -46,12 +47,14 @@ function IndexController() {
     // Control base-layer visibility
     //
     that.on("showLayer", function() {
-      console.log("show layer");
       document.querySelector("#map-instruction").style.opacity = 0;
     });
 
-    that.on("hideLayer", function() {
-      console.log("hide layer");
+    that.layerMenu.on("orderChanged", function(e) {
+
+      e.caller.order.forEach(function(layerItem) {
+        showLayer(layerItem);
+      });
     });
 
   }
@@ -77,6 +80,7 @@ function IndexController() {
         layerPanelClose = document.querySelector("#legend-layer-menu .close-button");
 
     layerMenu = new STMN.LegendLayerMenu("#legend-layer-menu");
+    that.layerMenu = layerMenu;
 
     //
     // when a layer is added, put it on the map
@@ -120,69 +124,69 @@ function IndexController() {
 
   function buildLayer(layerObject, pages) {
 
-    layers[layerObject.list][layerObject.id] = dropZoneLayers[layerObject.list](pages, {
+    if (typeof layers[layerObject.id] === "object") {
+      that.map.removeLayer(layers[layerObject.id]);
+      delete layers[layerObject.id];
+    }
+
+    layers[layerObject.id] = dropZoneLayers[layerObject.list](pages, {
       color : "red"
     });
 
-    that.map.addLayer(layers[layerObject.list][layerObject.id]);
+    that.map.addLayer(layers[layerObject.id]);
   }
 
   function showLayer(layerObject, callback) {
-
-    //
-    // Add an object to the layer cache for
-    // this list if it does not already exist
-    //
-    if (typeof layers[layerObject.list] !== "object") {
-      layers[layerObject.list] = {};
-    }
 
     if (typeof baseLayerAdded !== "boolean") {
       baseLayer.addTo(that.map);
       baseLayerAdded = true;
     }
 
-    return (new STMN.EcoengineClient).requestRecursive(layerObject.uri,
-    function(pages) { //Done
+    //
+    // At this time we will only fetch a layer once per page load
+    // for that reason we can assume that if we have data for a layer
+    // we can use it. One could force an update by deleting the
+    // cache entry for a layer
+    //
+    if (layerDataCache[layerObject.id]) {
 
-      if (typeof layers[layerObject.list][layerObject.id] === "object") {
-        that.map.removeLayer(layers[layerObject.list][layerObject.id]);
-        delete layers[layerObject.list][layerObject.id];
-      }
+      buildLayer(layerObject, layerDataCache[layerObject.id]);
 
-      buildLayer(layerObject, pages);
+    } else {
 
-      that.fire("showLayer");
+      return (new STMN.EcoengineClient).requestRecursive(layerObject.uri,
+      function(pages) { //Done
 
-      if (typeof callback === "function") {
-        callback();
-      }
-    },
-    function(pages) { //Progress
+        layerDataCache[layerObject.id] = pages;
+        buildLayer(layerObject, pages);
 
-      if (typeof layers[layerObject.list][layerObject.id] === "object") {
-        that.map.removeLayer(layers[layerObject.list][layerObject.id]);
-        delete layers[layerObject.list][layerObject.id];
-      }
+        that.fire("showLayer");
 
-      buildLayer(layerObject, pages);
+        if (typeof callback === "function") {
+          callback();
+        }
+      },
+      function(pages) { //Progress
 
-      that.fire("showLayerProgress");
-    });
+        buildLayer(layerObject, pages);
+
+        that.fire("showLayerProgress");
+      });
+
+    }
 
   }
 
   function hideLayer(id, list) {
 
-    if (typeof layers[list] === "object" && typeof layers[list][id] === "object") {
-      that.map.removeLayer(layers[list][id]);
+    console.log(layers[id]._map);
 
-      that.fire("hideLayer");
+    that.map.removeLayer(layers[id]);
 
-      return true;
-    } else {
-      return false;
-    }
+    that.fire("showLayer", {
+      layer : layers[id]
+    });
 
   }
 
@@ -197,8 +201,8 @@ function IndexController() {
   //
   // Init
   //
-  initMap();
   initLayerMenu();
+  initMap();
 
   return that;
 
