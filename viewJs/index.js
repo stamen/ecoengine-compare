@@ -180,8 +180,6 @@ function IndexController() {
 
   function hideLayer(id, list) {
 
-    console.log(layers[id]._map);
-
     that.map.removeLayer(layers[id]);
 
     that.fire("showLayer", {
