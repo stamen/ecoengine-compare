@@ -8,7 +8,8 @@ function IndexController() {
       dropZoneLayers = {
         "pointlayer": function (pages, layer) {
           var hex = new L.HexbinLayer({
-                  radius : 1,
+                  radiusRange : [1,1],
+                  radius: 1,
                   opacity: 1,
                   colorRange: [layer.color, layer.color]
               }).addTo(that.map);
