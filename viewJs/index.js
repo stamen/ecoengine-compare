@@ -6,22 +6,30 @@ function IndexController() {
       layers         = {},
       layerDataCache = {},
       dropZoneLayers = {
-        "pointlayer": function(pages) {
+        "pointlayer": function (pages, layer) {
           var hex = new L.HexbinLayer({
                   radius : 1,
-                  opacity: 1
+                  opacity: 1,
+                  colorRange: [layer.color, layer.color]
               }).addTo(that.map);
           hex.data(pages.filter(function(p){return (typeof p.geometry === "object" && p.geometry !== null)}).map(function(p) {return p.geometry.coordinates;}));
           return hex;
         },
         "hulllayer": STMN.hullLayer,
-        "hexlayer": function(pages) {
+        "hexlayer": function (pages, layer) {
           var hex = new L.HexbinLayer().addTo(that.map);
           hex.data(pages.filter(function(p){return (typeof p.geometry === "object" && p.geometry !== null)}).map(function(p) {return p.geometry.coordinates;}));
           return hex;
+        },
+        "raster" : function (pages, layer) {
+          rasterLayers.push(L.tileLayer(layer.uri));
+
+          rasterLayers[rasterLayers.length-1].addTo(that.map)
+          return rasterLayers[rasterLayers.length-1];
         }
       },
-      baseLayer, baseLayerAdded, layerMenu;
+      rasterLayers = [],
+      layerMenu;
 
   //
   // Convenience methods for browsers
@@ -39,18 +47,21 @@ function IndexController() {
     //
     // Add base-layer
     //
-    baseLayer = L.tileLayer("http://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png", {
+    rasterLayers.push(L.tileLayer("http://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png", {
       attribution: "&copy; <a href=\"http://osm.org/copyright\">OpenStreetMap</a> contributors"
-    });
+    }))
+    rasterLayers[rasterLayers.length-1].addTo(that.map);
 
     //
     // Control base-layer visibility
     //
     that.on("showLayer", function() {
-      document.querySelector("#map-instruction").style.opacity = 0;
+      //document.querySelector("#map-instruction").style.opacity = 0;
     });
 
     that.layerMenu.on("orderChanged", function(e) {
+
+      clearRasters();
 
       e.caller.order.forEach(function(layerItem) {
         showLayer(layerItem);
@@ -73,6 +84,14 @@ function IndexController() {
     if (loadingNode) {
       loadingNode.parentNode.removeChild(loadingNode);
     }
+  }
+
+  function clearRasters() {
+    rasterLayers.forEach(function (layer) {
+      that.map.removeLayer(layer);
+    });
+
+    rasterLayers = [];
   }
 
   function initLayerMenu() {
@@ -129,19 +148,12 @@ function IndexController() {
       delete layers[layerObject.id];
     }
 
-    layers[layerObject.id] = dropZoneLayers[layerObject.list](pages, {
-      color : "red"
-    });
+    layers[layerObject.id] = dropZoneLayers[layerObject.list](pages, layerObject);
 
     that.map.addLayer(layers[layerObject.id]);
   }
 
   function showLayer(layerObject, callback) {
-
-    if (typeof baseLayerAdded !== "boolean") {
-      baseLayer.addTo(that.map);
-      baseLayerAdded = true;
-    }
 
     //
     // At this time we will only fetch a layer once per page load
@@ -149,7 +161,7 @@ function IndexController() {
     // we can use it. One could force an update by deleting the
     // cache entry for a layer
     //
-    if (layerDataCache[layerObject.id]) {
+    if (layerDataCache[layerObject.id] || layerObject.list === "raster") {
 
       buildLayer(layerObject, layerDataCache[layerObject.id]);
 
