@@ -66,7 +66,7 @@ function IndexController() {
 
     that.layerMenu.on("orderChanged", function(e) {
 
-      clearRasters();
+      clearLayers();
 
       e.caller.order.forEach(function(layerItem) {
         showLayer(layerItem);
@@ -91,12 +91,14 @@ function IndexController() {
     }
   }
 
-  function clearRasters() {
-    rasterLayers.forEach(function (layer) {
+  function clearLayers() {
+
+    that.map.eachLayer(function(layer) {
       that.map.removeLayer(layer);
     });
 
     rasterLayers = [];
+    layers = {};
   }
 
   function initLayerMenu() {
@@ -147,11 +149,6 @@ function IndexController() {
   }
 
   function buildLayer(layerObject, pages) {
-
-    if (typeof layers[layerObject.id] === "object" && layerObject.list !== "raster") {
-      that.map.removeLayer(layers[layerObject.id]);
-      delete layers[layerObject.id];
-    }
 
     layers[layerObject.id] = dropZoneLayers[layerObject.list](pages, layerObject);
 

@@ -27,47 +27,48 @@ body {
   }
 }
 body {
-  font-family: 'Ubuntu', sans-serif;
+  font-family: 'Droid Sans', sans-serif;
   line-height:1.5em;
   font-size:14px;
+
+  .interface-title {
+    background-color: rgb(103,171,236);
+    padding: 10px;
+    color: white;
+    display:none;
+
+    @media (max-width: 720px) {
+      display:block;
+    }
+  }
 }
 #map {
   background-color:transparent;
-}
-
-#map-instruction {
-  position:absolute;
-  top:20%;
-  left:40%;
-  width:200px;
-  text-align:center;
-  color:#fff;
-  font-size:125%;
-
-  display:block;
-  @media (max-width: 720px) {
-    display:none;
-  }
 }
 
 #legend-layer-menu-min {
   display:block;
   background-color:#fff;
   border:solid 1px #aaa;
-  width:21px;
-  height:15px;
+  height: 16px;
+  width: 19px;
   position:absolute;
-  top:10px;
+  top: 10px;
   right:10px;
   padding:10px;
   cursor:pointer;
+
+  @media (max-width: 720px) {
+    top: 51px;
+  }
 
   &:hover {
     background-color:rgb(103,171,236);
   }
 
   svg {
-    width:28px;
+    height: 26px;
+    width: 28px;
     margin:-1px 0 0 -5px;
   }
 
@@ -89,6 +90,14 @@ body {
 
   background-color:rgba(256,256,256,.9);
   max-height:95vh;
+
+  .interface-title {
+    margin-top: -9px;
+    margin-left: -9px;
+    margin-right: -9px;
+
+    display:block;
+  }
 
   .close-button {
     display:none;
@@ -112,7 +121,7 @@ body {
       display:block;
       width:25px;
       position:absolute;
-      top:10px;
+      top: 52px;
       right:29px;
       cursor:pointer;
 
