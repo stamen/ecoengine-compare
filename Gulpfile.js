@@ -24,11 +24,11 @@ require("gulp-watch");
 
 var paths = {
   sass: "./sass",
-  css: "./public/css",
+  css: "./build-branch/css",
   templates: "./templates/*.handlebars",
   js: "./js/*.js",
   viewJs: "./viewJs/*.js",
-  publicJs: "./public/js"
+  publicJs: "./build-branch/js"
 };
 
 //
@@ -151,7 +151,7 @@ gulp.task("templates", function() {
       ]
     }))
     .pipe(rename({extname: ".html"}))
-    .pipe(gulp.dest("./public/"));
+    .pipe(gulp.dest("./build-branch/"));
 });
 
 //
@@ -160,7 +160,7 @@ gulp.task("templates", function() {
 //
 gulp.task("webserver", function() {
   gulp
-    .src("./public/")
+    .src("./build-branch/")
     .pipe(webserver({
       open: false, // unless you want it
       livereload: false, // unless you want it
@@ -176,7 +176,7 @@ gulp.task("webserver", function() {
 //
 gulp.task("sass", function () {
   fs.readdirSync("./sass").forEach(function() {
-    run("sass --update sass/:./public/css", {}).exec();
+    run("sass --update sass/:./build-branch/css", {}).exec();
   });
 });
 
