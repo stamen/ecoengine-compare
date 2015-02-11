@@ -23,9 +23,13 @@ function IndexController() {
           return hex;
         },
         "raster" : function (pages, layer) {
-          rasterLayers.push(L.tileLayer(layer.uri));
+          rasterLayers.push(L.tileLayer(layer.uri, {
+            transparent: true,
+            unloadInvisibleTiles: true
+          }));
 
-          rasterLayers[rasterLayers.length-1].addTo(that.map)
+          rasterLayers[rasterLayers.length-1].addTo(that.map);
+
           return rasterLayers[rasterLayers.length-1];
         }
       },
@@ -144,7 +148,7 @@ function IndexController() {
 
   function buildLayer(layerObject, pages) {
 
-    if (typeof layers[layerObject.id] === "object") {
+    if (typeof layers[layerObject.id] === "object" && layerObject.list !== "raster") {
       that.map.removeLayer(layers[layerObject.id]);
       delete layers[layerObject.id];
     }
