@@ -17211,8 +17211,6 @@ L.MarkerClusterGroup.include({
       // call this function on every dragend event
       onend: function (event) {
 
-        var order;
-
         event.target.style["-webkit-transform"] = "translate(0,0)";
         event.target.style.transform = "translate(0,0)";
         event.target.parentNode.classList.remove("dragging");
@@ -17228,28 +17226,7 @@ L.MarkerClusterGroup.include({
 
         event.target.classList.remove("dragging");
 
-        order = getLayerOrder();
-
-        if (order !== orderCache) {
-
-          that.fire("orderChanged", {
-            "order" : order.map(function(interactObject) {
-
-              //
-              // Convert output from interact objects to
-              // user friendly layer objects
-              //
-
-              return {
-                "id"    : interactObject.element().getAttribute("data-id"),
-                "list"  : interactObject.element().getAttribute("data-list"),
-                "label" : interactObject.element().getAttribute("data-label"),
-                "uri"   : interactObject.element().getAttribute("data-uri")
-              }
-            })
-          });
-          orderCache = order;
-        }
+        triggerOrderChange();
 
         oldParent = null;
       }
@@ -17309,12 +17286,53 @@ L.MarkerClusterGroup.include({
       }
     };
 
+    function triggerOrderChange() {
+      var order = getLayerOrder();
+
+      if (order !== orderCache) {
+
+        order = order.reverse().map(function(interactObject) {
+
+          //
+          // Convert output from interact objects to
+          // user friendly layer objects, unless it is already one
+          //
+
+          if (!interactObject.list) {
+            return {
+              "id"    : interactObject.element().getAttribute("data-id"),
+              "list"  : interactObject.element().getAttribute("data-list"),
+              "label" : interactObject.element().getAttribute("data-label"),
+              "uri"   : interactObject.element().getAttribute("data-uri")
+            }
+          } else {
+            return interactObject;
+          }
+        });
+
+        that.fire("orderChanged", {
+          "order" : order
+        });
+        orderCache = order;
+      }
+    }
+
     function getLayerOrder() {
-      var layerNodes = rootNode.querySelectorAll(".draggable"),
-          order      = [];
+      var layerNodes   = rootNode.querySelectorAll(".draggable"),
+          rasterLayers = rootNode.querySelectorAll("select"),
+          order        = [];
 
       for (var i=0; layerNodes.length > i; i++) {
         order.push( layers[ layerNodes[i].getAttribute("data-id") ] );
+      }
+
+      for (var i=0; rasterLayers.length > i; i++) {
+        if (rasterLayers[i].value.length) {
+          order.push({
+            "list" : "raster",
+            "uri"  : rasterLayers[i].value
+          });
+        }
       }
 
       return order;
@@ -17505,6 +17523,7 @@ L.MarkerClusterGroup.include({
 
       var layerGroupNodes = rootNode.querySelectorAll("ul"),
           actionNodes     = document.querySelectorAll("h2 button"),
+          rasterLayers    = rootNode.querySelectorAll("select"),
           layerName;
 
       //
@@ -17526,11 +17545,23 @@ L.MarkerClusterGroup.include({
       }
 
       //
-      // Iterate through buttons and assume they are meant to be
-      // add actions
+      // Handle click events
       //
-      for (i=0; actionNodes.length > i; i++) {
-        actionNodes[i].addEventListener("click", onClickLayerAddAction);
+      rootNode.addEventListener("click", function(e) {
+
+        if (e.target.tagName === "BUTTON") {
+          onClickLayerAddAction.apply(this, arguments);
+        }
+
+      }, false);
+
+      //
+      // Add change listeners to raster layers
+      //
+      for (var i=0; rasterLayers.length > i; i++) {
+        rasterLayers[i].addEventListener("change", function(e) {
+          triggerOrderChange();
+        });
       }
     }
 
