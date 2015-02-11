@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8">
+
+  <title>Berkeley eco engine compair demo</title>
+  <meta name="author" content="Stamen Design">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+
+  <link href='http://fonts.googleapis.com/css?family=Ubuntu' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" type="text/css" href="/css/vendor.css">
+  <link rel="stylesheet" type="text/css" href="/css/base.css">
+
+</head>
+
+<body class="ecoengine-compair" ontouchstart="" id="top">
+
+<!--div id="map-instruction">
+  To begin, add a layer in the menu →
+</div-->
+
+<div id="map">
+</div>
+
+<div id="legend-layer-menu-min">
+  <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+     viewBox="-589 357.5 100 87.5" enable-background="new -589 357.5 100 87.5" xml:space="preserve">
+  <polygon fill="#010101" points="-574.7,383 -537.7,392.3 -500.7,383 -500.7,392.3 -537.7,401.5 -574.7,392.3 "/>
+  <polygon fill="#010101" points="-574.7,401.5 -537.7,410.8 -500.7,401.5 -500.7,410.8 -537.7,420 -574.7,410.8 "/>
+  <polygon fill="#010101" points="-574.7,364.5 -537.7,355.2 -500.7,364.5 -500.7,373.8 -537.7,383 -574.7,373.8 "/>
+  </svg>
+</div>
+
+<div id="legend-layer-menu">
+  <svg class="close-button" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+   viewBox="-579 345 86 84" enable-background="new -579 345 86 84" xml:space="preserve">
+
+<g id="Close">
+  <circle fill="none" stroke-width="6" stroke-miterlimit="10" cx="-537.7" cy="385.4" r="34.8"/>
+  <line fill="none" stroke-width="6" stroke-miterlimit="10" x1="-522" y1="401.2" x2="-553.4" y2="369.7"/>
+  <line fill="none" stroke-width="6" stroke-miterlimit="10" x1="-553.4" y1="401.2" x2="-522" y2="369.7"/>
+</g>
+</svg>
+  <div class="content-container">
+    <h2>Point <button data-for="pointlayer" class="add-action">add</button></h2>
+    <ul data-layername="pointlayer">
+    </ul>
+    <h2>Polygon <button data-for="hulllayer" class="add-action">add</button></h2>
+    <ul data-layername="hulllayer">
+    </ul>
+    <h2>Hexagon <button data-for="hexlayer" class="add-action">add</button></h2>
+    <ul data-layername="hexlayer">
+    </ul>
+
+    <h2>Boundaries</h2>
+    <select id="boundary-select">
+      <option value="">None</option>
+      <option value="https://dev-ecoengine.berkeley.edu/tiles/vtmveg/{z}/{x}/{y}.png">VTM Vegetation Features</option><option value="https://dev-ecoengine.berkeley.edu/tiles/vtmquads/{z}/{x}/{y}.png">VTM Quadrants</option><option value="https://dev-ecoengine.berkeley.edu/tiles/jepson-regions/{z}/{x}/{y}.png">Jepson Regions</option><option value="https://dev-ecoengine.berkeley.edu/tiles/us_eco_III/{z}/{x}/{y}.png">US Ecoregions Level III</option><option value="https://dev-ecoengine.berkeley.edu/tiles/reserves/{z}/{x}/{y}.png">UC NRC holdings</option><option value="https://dev-ecoengine.berkeley.edu/tiles/cacounties/{z}/{x}/{y}.png">California Counties</option><option value="https://dev-ecoengine.berkeley.edu/tiles/gadm0/{z}/{x}/{y}.png">GADM Countries</option>
+    </select>
+
+    <h2>Environment</h2>
+    <select id="environment-select">
+      <option value="">None</option>
+      <option value="https://dev-ecoengine.berkeley.edu/tiles/vtmplots/{z}/{x}/{y}.png">VTM Plots</option><option value="https://dev-ecoengine.berkeley.edu/api/tiles/tasmax_rcp60_r1i1p1_gfdl-esm2m-2031-02-16/{z}/{x}/{y}/">NASA NEX GFDL-ESM2M maximum temperature 2031-02-16</option><option value="https://dev-ecoengine.berkeley.edu/api/tiles/tasmax_rcp60_r1i1p1_gfdl-esm2m-2031-03-16/{z}/{x}/{y}/">NASA NEX GFDL-ESM2M maximum temperature 2031-03-16</option><option value="https://dev-ecoengine.berkeley.edu/api/tiles/tasmax_rcp60_r1i1p1_gfdl-esm2m-2031-04-16/{z}/{x}/{y}/">NASA NEX GFDL-ESM2M maximum temperature 2031-04-16</option><option value="https://dev-ecoengine.berkeley.edu/api/tiles/tasmax_rcp60_r1i1p1_gfdl-esm2m-2031-05-16/{z}/{x}/{y}/">NASA NEX GFDL-ESM2M maximum temperature 2031-05-16</option><option value="https://dev-ecoengine.berkeley.edu/api/tiles/tasmax_rcp60_r1i1p1_gfdl-esm2m-2031-06-16/{z}/{x}/{y}/">NASA NEX GFDL-ESM2M maximum temperature 2031-06-16</option><option value="https://dev-ecoengine.berkeley.edu/api/tiles/tasmax_rcp60_r1i1p1_gfdl-esm2m-2031-07-16/{z}/{x}/{y}/">NASA NEX GFDL-ESM2M maximum temperature 2031-07-16</option><option value="https://dev-ecoengine.berkeley.edu/api/tiles/tasmax_rcp60_r1i1p1_gfdl-esm2m-2031-08-16/{z}/{x}/{y}/">NASA NEX GFDL-ESM2M maximum temperature 2031-08-16</option><option value="https://dev-ecoengine.berkeley.edu/api/tiles/tasmax_rcp60_r1i1p1_gfdl-esm2m-2031-09-16/{z}/{x}/{y}/">NASA NEX GFDL-ESM2M maximum temperature 2031-09-16</option><option value="https://dev-ecoengine.berkeley.edu/api/tiles/tasmax_rcp60_r1i1p1_gfdl-esm2m-2031-10-16/{z}/{x}/{y}/">NASA NEX GFDL-ESM2M maximum temperature 2031-10-16</option><option value="https://dev-ecoengine.berkeley.edu/api/tiles/tasmax_rcp60_r1i1p1_gfdl-esm2m-2031-11-16/{z}/{x}/{y}/">NASA NEX GFDL-ESM2M maximum temperature 2031-11-16</option><option value="https://dev-ecoengine.berkeley.edu/api/tiles/tasmax_rcp60_r1i1p1_gfdl-esm2m-2031-12-16/{z}/{x}/{y}/">NASA NEX GFDL-ESM2M maximum temperature 2031-12-16</option><option value="https://dev-ecoengine.berkeley.edu/api/tiles/tasmax_rcp60_r1i1p1_gfdl-esm2m-2032-01-16/{z}/{x}/{y}/">NASA NEX GFDL-ESM2M maximum temperature 2032-01-16</option><option value="https://dev-ecoengine.berkeley.edu/api/tiles/tasmax_rcp60_r1i1p1_gfdl-esm2m-2032-02-16/{z}/{x}/{y}/">NASA NEX GFDL-ESM2M maximum temperature 2032-02-16</option><option value="https://dev-ecoengine.berkeley.edu/api/tiles/tasmax_rcp60_r1i1p1_gfdl-esm2m-2032-03-16/{z}/{x}/{y}/">NASA NEX GFDL-ESM2M maximum temperature 2032-03-16</option><option value="https://dev-ecoengine.berkeley.edu/api/tiles/tasmax_rcp60_r1i1p1_gfdl-esm2m-2032-04-16/{z}/{x}/{y}/">NASA NEX GFDL-ESM2M maximum temperature 2032-04-16</option><option value="https://dev-ecoengine.berkeley.edu/api/tiles/tasmax_rcp60_r1i1p1_gfdl-esm2m-2032-05-16/{z}/{x}/{y}/">NASA NEX GFDL-ESM2M maximum temperature 2032-05-16</option><option value="https://dev-ecoengine.berkeley.edu/api/tiles/tasmax_rcp60_r1i1p1_gfdl-esm2m-2032-06-16/{z}/{x}/{y}/">NASA NEX GFDL-ESM2M maximum temperature 2032-06-16</option><option value="https://dev-ecoengine.berkeley.edu/api/tiles/tasmax_rcp60_r1i1p1_gfdl-esm2m-2032-07-16/{z}/{x}/{y}/">NASA NEX GFDL-ESM2M maximum temperature 2032-07-16</option><option value="https://dev-ecoengine.berkeley.edu/api/tiles/tasmax_rcp60_r1i1p1_gfdl-esm2m-2032-08-16/{z}/{x}/{y}/">NASA NEX GFDL-ESM2M maximum temperature 2032-08-16</option><option value="https://dev-ecoengine.berkeley.edu/api/tiles/tasmax_rcp60_r1i1p1_gfdl-esm2m-2032-09-16/{z}/{x}/{y}/">NASA NEX GFDL-ESM2M maximum temperature 2032-09-16</option><option value="https://dev-ecoengine.berkeley.edu/api/tiles/tasmax_rcp60_r1i1p1_gfdl-esm2m-2032-10-16/{z}/{x}/{y}/">NASA NEX GFDL-ESM2M maximum temperature 2032-10-16</option><option value="https://dev-ecoengine.berkeley.edu/api/tiles/tasmax_rcp60_r1i1p1_gfdl-esm2m-2032-11-16/{z}/{x}/{y}/">NASA NEX GFDL-ESM2M maximum temperature 2032-11-16</option><option value="https://dev-ecoengine.berkeley.edu/api/tiles/tasmax_rcp60_r1i1p1_gfdl-esm2m-2032-12-16/{z}/{x}/{y}/">NASA NEX GFDL-ESM2M maximum temperature 2032-12-16</option><option value="https://dev-ecoengine.berkeley.edu/api/tiles/tasmax_rcp60_r1i1p1_gfdl-esm2m-2033-01-16/{z}/{x}/{y}/">NASA NEX GFDL-ESM2M maximum temperature 2033-01-16</option><option value="https://dev-ecoengine.berkeley.edu/api/tiles/tasmax_rcp60_r1i1p1_gfdl-esm2m-2033-02-16/{z}/{x}/{y}/">NASA NEX GFDL-ESM2M maximum temperature 2033-02-16</option><option value="https://dev-ecoengine.berkeley.edu/api/tiles/tasmax_rcp60_r1i1p1_gfdl-esm2m-2033-03-16/{z}/{x}/{y}/">NASA NEX GFDL-ESM2M maximum temperature 2033-03-16</option><option value="https://dev-ecoengine.berkeley.edu/api/tiles/tasmax_rcp60_r1i1p1_gfdl-esm2m-2033-04-16/{z}/{x}/{y}/">NASA NEX GFDL-ESM2M maximum temperature 2033-04-16</option><option value="https://dev-ecoengine.berkeley.edu/api/tiles/tasmax_rcp60_r1i1p1_gfdl-esm2m-2033-05-16/{z}/{x}/{y}/">NASA NEX GFDL-ESM2M maximum temperature 2033-05-16</option><option value="https://dev-ecoengine.berkeley.edu/api/tiles/tasmax_rcp60_r1i1p1_gfdl-esm2m-2033-06-16/{z}/{x}/{y}/">NASA NEX GFDL-ESM2M maximum temperature 2033-06-16</option><option value="https://dev-ecoengine.berkeley.edu/api/tiles/tasmax_rcp60_r1i1p1_gfdl-esm2m-2033-07-16/{z}/{x}/{y}/">NASA NEX GFDL-ESM2M maximum temperature 2033-07-16</option><option value="https://dev-ecoengine.berkeley.edu/api/tiles/tasmax_rcp60_r1i1p1_gfdl-esm2m-2033-08-16/{z}/{x}/{y}/">NASA NEX GFDL-ESM2M maximum temperature 2033-08-16</option><option value="https://dev-ecoengine.berkeley.edu/api/tiles/tasmax_rcp60_r1i1p1_gfdl-esm2m-2033-09-16/{z}/{x}/{y}/">NASA NEX GFDL-ESM2M maximum temperature 2033-09-16</option><option value="https://dev-ecoengine.berkeley.edu/api/tiles/tasmax_rcp60_r1i1p1_gfdl-esm2m-2033-10-16/{z}/{x}/{y}/">NASA NEX GFDL-ESM2M maximum temperature 2033-10-16</option><option value="https://dev-ecoengine.berkeley.edu/api/tiles/tasmax_rcp60_r1i1p1_gfdl-esm2m-2033-11-16/{z}/{x}/{y}/">NASA NEX GFDL-ESM2M maximum temperature 2033-11-16</option><option value="https://dev-ecoengine.berkeley.edu/api/tiles/tasmax_rcp60_r1i1p1_gfdl-esm2m-2033-12-16/{z}/{x}/{y}/">NASA NEX GFDL-ESM2M maximum temperature 2033-12-16</option><option value="https://dev-ecoengine.berkeley.edu/api/tiles/tasmax_rcp60_r1i1p1_gfdl-esm2m-2034-01-16/{z}/{x}/{y}/">NASA NEX GFDL-ESM2M maximum temperature 2034-01-16</option><option value="https://dev-ecoengine.berkeley.edu/api/tiles/tasmax_rcp60_r1i1p1_gfdl-esm2m-2034-02-16/{z}/{x}/{y}/">NASA NEX GFDL-ESM2M maximum temperature 2034-02-16</option><option value="https://dev-ecoengine.berkeley.edu/api/tiles/tasmax_rcp60_r1i1p1_gfdl-esm2m-2034-03-16/{z}/{x}/{y}/">NASA NEX GFDL-ESM2M maximum temperature 2034-03-16</option><option value="https://dev-ecoengine.berkeley.edu/api/tiles/tasmax_rcp60_r1i1p1_gfdl-esm2m-2034-04-16/{z}/{x}/{y}/">NASA NEX GFDL-ESM2M maximum temperature 2034-04-16</option><option value="https://dev-ecoengine.berkeley.edu/api/tiles/tasmax_rcp60_r1i1p1_gfdl-esm2m-2034-05-16/{z}/{x}/{y}/">NASA NEX GFDL-ESM2M maximum temperature 2034-05-16</option><option value="https://dev-ecoengine.berkeley.edu/api/tiles/tasmax_rcp60_r1i1p1_gfdl-esm2m-2034-06-16/{z}/{x}/{y}/">NASA NEX GFDL-ESM2M maximum temperature 2034-06-16</option><option value="https://dev-ecoengine.berkeley.edu/api/tiles/tasmax_rcp60_r1i1p1_gfdl-esm2m-2034-07-16/{z}/{x}/{y}/">NASA NEX GFDL-ESM2M maximum temperature 2034-07-16</option><option value="https://dev-ecoengine.berkeley.edu/api/tiles/tasmax_rcp60_r1i1p1_gfdl-esm2m-2034-08-16/{z}/{x}/{y}/">NASA NEX GFDL-ESM2M maximum temperature 2034-08-16</option><option value="https://dev-ecoengine.berkeley.edu/api/tiles/tasmax_rcp60_r1i1p1_gfdl-esm2m-2034-09-16/{z}/{x}/{y}/">NASA NEX GFDL-ESM2M maximum temperature 2034-09-16</option><option value="https://dev-ecoengine.berkeley.edu/api/tiles/tasmax_rcp60_r1i1p1_gfdl-esm2m-2034-10-16/{z}/{x}/{y}/">NASA NEX GFDL-ESM2M maximum temperature 2034-10-16</option><option value="https://dev-ecoengine.berkeley.edu/api/tiles/tasmax_rcp60_r1i1p1_gfdl-esm2m-2034-11-16/{z}/{x}/{y}/">NASA NEX GFDL-ESM2M maximum temperature 2034-11-16</option><option value="https://dev-ecoengine.berkeley.edu/api/tiles/tasmax_rcp60_r1i1p1_gfdl-esm2m-2034-12-16/{z}/{x}/{y}/">NASA NEX GFDL-ESM2M maximum temperature 2034-12-16</option><option value="https://dev-ecoengine.berkeley.edu/api/tiles/tasmax_rcp60_r1i1p1_gfdl-esm2m-2035-01-16/{z}/{x}/{y}/">NASA NEX GFDL-ESM2M maximum temperature 2035-01-16</option><option value="https://dev-ecoengine.berkeley.edu/api/tiles/tasmax_rcp60_r1i1p1_gfdl-esm2m-2035-02-16/{z}/{x}/{y}/">NASA NEX GFDL-ESM2M maximum temperature 2035-02-16</option><option value="https://dev-ecoengine.berkeley.edu/api/tiles/tasmax_rcp60_r1i1p1_gfdl-esm2m-2035-03-16/{z}/{x}/{y}/">NASA NEX GFDL-ESM2M maximum temperature 2035-03-16</option><option value="https://dev-ecoengine.berkeley.edu/api/tiles/tasmax_rcp60_r1i1p1_gfdl-esm2m-2035-04-16/{z}/{x}/{y}/">NASA NEX GFDL-ESM2M maximum temperature 2035-04-16</option><option value="https://dev-ecoengine.berkeley.edu/api/tiles/tasmax_rcp60_r1i1p1_gfdl-esm2m-2035-05-16/{z}/{x}/{y}/">NASA NEX GFDL-ESM2M maximum temperature 2035-05-16</option><option value="https://dev-ecoengine.berkeley.edu/api/tiles/tasmax_rcp60_r1i1p1_gfdl-esm2m-2035-06-16/{z}/{x}/{y}/">NASA NEX GFDL-ESM2M maximum temperature 2035-06-16</option><option value="https://dev-ecoengine.berkeley.edu/api/tiles/tasmax_rcp60_r1i1p1_gfdl-esm2m-2035-07-16/{z}/{x}/{y}/">NASA NEX GFDL-ESM2M maximum temperature 2035-07-16</option><option value="https://dev-ecoengine.berkeley.edu/api/tiles/tasmax_rcp60_r1i1p1_gfdl-esm2m-2035-08-16/{z}/{x}/{y}/">NASA NEX GFDL-ESM2M maximum temperature 2035-08-16</option><option value="https://dev-ecoengine.berkeley.edu/api/tiles/tasmax_rcp60_r1i1p1_gfdl-esm2m-2035-09-16/{z}/{x}/{y}/">NASA NEX GFDL-ESM2M maximum temperature 2035-09-16</option><option value="https://dev-ecoengine.berkeley.edu/api/tiles/tasmax_rcp60_r1i1p1_gfdl-esm2m-2035-10-16/{z}/{x}/{y}/">NASA NEX GFDL-ESM2M maximum temperature 2035-10-16</option><option value="https://dev-ecoengine.berkeley.edu/api/tiles/tasmax_rcp60_r1i1p1_gfdl-esm2m-2035-11-16/{z}/{x}/{y}/">NASA NEX GFDL-ESM2M maximum temperature 2035-11-16</option><option value="https://dev-ecoengine.berkeley.edu/api/tiles/tasmax_rcp60_r1i1p1_gfdl-esm2m-2035-12-16/{z}/{x}/{y}/">NASA NEX GFDL-ESM2M maximum temperature 2035-12-16</option><option value="https://dev-ecoengine.berkeley.edu/api/tiles/tasmax_rcp60_r1i1p1_gfdl-esm2m-2036-01-16/{z}/{x}/{y}/">NASA NEX GFDL-ESM2M maximum temperature 2036-01-16</option>
+    </select>
+
+    <h2>Basemap</h2>
+    <select id="layer-select">
+      <option value="http://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png">Light</option>
+      <option value="http://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}.png">Dark</option>
+      <option value="http://{s}.tile.stamen.com/terrain/{z}/{x}/{y}.jpg">Stamen Terrain</option>
+      <option value="http://server.arcgisonline.com/ArcGIS/rest/services/World_Physical_Map/MapServer/tile/{z}/{y}/{x}">Esri World Physical</option>
+      <option value="http://otile1.mqcdn.com/tiles/1.0.0/sat/{z}/{x}/{y}.jpg">Satellite</option>
+    </select>
+  </div>
+</div>
+
+
+<script>
+window.STMN = {};
+</script>
+
+<script src="/js/ecoengine-compare.min.js"></script>
+<script src="/js/index.js"></script>
+
+</body>
+</html>
