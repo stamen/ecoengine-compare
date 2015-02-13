@@ -42,11 +42,14 @@ function IndexController() {
         "hexlayer": function (pages, layer) {
           var hex = new L.HexbinLayer({
                   radiusRange : [1,10],
-                  radius: 7,
+                  radius: document.querySelector("#hexagon-radius").value,
                   opacity: 1,
                   colorRange: [layer.color, layer.color]
               }).addTo(that.map);
           hex.data(pages.filter(function(p){return (typeof p.geometry === "object" && p.geometry !== null)}).map(function(p) {return p.geometry.coordinates;}));
+
+          hex.options.__sHexLayer = true;
+
           return hex;
         },
         "raster" : function (pages, layer) {
@@ -93,8 +96,6 @@ function IndexController() {
       });
     });
 
-    var hi = 0;
-
     that.layerMenu.on("color-change", function(e) {
 
       //
@@ -136,6 +137,20 @@ function IndexController() {
         });
       }
 
+    });
+
+    //
+    // Hexagon radius slider
+    //
+    document.querySelector("#hexagon-radius").addEventListener("change", function(e) {
+      that.map.eachLayer(function(layer) {
+
+        if (layer.options.__sHexLayer === true) {
+          layer.radiusScale().range([e.target.value, e.target.value]);
+          layer._redraw();
+        }
+
+      });
     });
 
   }
