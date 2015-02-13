@@ -16,9 +16,36 @@ function IndexController() {
           hex.data(pages.filter(function(p){return (typeof p.geometry === "object" && p.geometry !== null)}).map(function(p) {return p.geometry.coordinates;}));
           return hex;
         },
-        "hulllayer": STMN.hullLayer,
+        "hulllayer": function (features, layer) {
+
+          var group = new L.MarkerClusterGroup({
+            "polygonOptions" : {
+              "color"  : layer.color,
+              "stroke" : false,
+              "opacity" : 0.7
+            }
+          });
+
+          features.forEach(function(feature) {
+            if (feature.geometry) {
+              group.addLayer(L.marker([
+                feature.geometry.coordinates[1],
+                feature.geometry.coordinates[0]
+                ],{
+                  "icon" : L.divIcon({className: "point-feature-icon point-feature-icon-" + layer.color})
+                }));
+              }
+          });
+
+          return group;
+        },
         "hexlayer": function (pages, layer) {
-          var hex = new L.HexbinLayer().addTo(that.map);
+          var hex = new L.HexbinLayer({
+                  radiusRange : [1,10],
+                  radius: 7,
+                  opacity: 1,
+                  colorRange: [layer.color, layer.color]
+              }).addTo(that.map);
           hex.data(pages.filter(function(p){return (typeof p.geometry === "object" && p.geometry !== null)}).map(function(p) {return p.geometry.coordinates;}));
           return hex;
         },
@@ -57,13 +84,6 @@ function IndexController() {
     }))
     rasterLayers[rasterLayers.length-1].addTo(that.map);
 
-    //
-    // Control base-layer visibility
-    //
-    that.on("showLayer", function() {
-      //document.querySelector("#map-instruction").style.opacity = 0;
-    });
-
     that.layerMenu.on("orderChanged", function(e) {
 
       clearLayers();
@@ -71,6 +91,51 @@ function IndexController() {
       e.caller.order.forEach(function(layerItem) {
         showLayer(layerItem);
       });
+    });
+
+    var hi = 0;
+
+    that.layerMenu.on("color-change", function(e) {
+
+      //
+      // Color change handler for point and hexagon layers
+      //
+      if (e.caller.list === "pointlayer" || e.caller.list === "hexlayer") {
+        layers[e.caller.id].colorScale().range([e.caller.color, e.caller.color]);
+        layers[e.caller.id]._redraw();
+      }
+
+      //
+      // Color change handler for Convex Hull layers
+      //
+      if (e.caller.list === "hulllayer") {
+
+        layers[e.caller.id]._featureGroup.getLayers().forEach(function(layer) {
+
+          var innerMarker;
+
+          if (layer._icon) {
+            innerMarker = layer._icon.querySelector(".innerMarker");
+
+            if (innerMarker) {
+              innerMarker.style.backgroundColor = e.caller.color;
+            }
+          }
+
+          if (layer._group) { //A layer group
+            layer._group.getLayers().forEach(function(subLayer) {
+
+              if (subLayer._path) { //a polygon
+                subLayer.setStyle({
+                  "color" : e.caller.color
+                });
+              }
+
+            });
+          }
+        });
+      }
+
     });
 
   }
@@ -149,6 +214,11 @@ function IndexController() {
   }
 
   function buildLayer(layerObject, pages) {
+
+    if (typeof layers[layerObject.id] === "object" && layerObject.list !== "raster") {
+       that.map.removeLayer(layers[layerObject.id]);
+       delete layers[layerObject.id];
+     }
 
     layers[layerObject.id] = dropZoneLayers[layerObject.list](pages, layerObject);
 
