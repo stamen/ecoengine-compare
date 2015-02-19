@@ -11,7 +11,7 @@
   <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
   <![endif]-->
 
-  <link href='http://fonts.googleapis.com/css?family=Ubuntu' rel='stylesheet' type='text/css'>
+  <link href='http://fonts.googleapis.com/css?family=Droid+Sans' rel='stylesheet' type='text/css'>
   <link rel="stylesheet" type="text/css" href="/css/vendor.css">
   <link rel="stylesheet" type="text/css" href="/css/base.css">
 
@@ -19,9 +19,7 @@
 
 <body class="ecoengine-compair" ontouchstart="" id="top">
 
-<!--div id="map-instruction">
-  To begin, add a layer in the menu →
-</div-->
+<div class="interface-title">EcoEngine Co-Visualization</div>
 
 <div id="map">
 </div>
@@ -36,6 +34,7 @@
 </div>
 
 <div id="legend-layer-menu">
+  <div class="interface-title">EcoEngine Co-Visualization</div>
   <svg class="close-button" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
    viewBox="-579 345 86 84" enable-background="new -579 345 86 84" xml:space="preserve">
 
@@ -53,6 +52,8 @@
     <ul data-layername="hulllayer">
     </ul>
     <h2>Hexagon <button data-for="hexlayer" class="add-action">add</button></h2>
+    <label for=hexagon-radius>Radius</label>
+    <input type="range" min=1 max=30 value=7 id="hexagon-radius">
     <ul data-layername="hexlayer">
     </ul>
 

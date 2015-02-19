@@ -9188,16 +9188,34 @@ L.Map.include({
 
 }(window, document));
 /**
- * interact.js v1.2.2
+ * interact.js v1.2.3
  *
  * Copyright (c) 2012-2015 Taye Adeyemi <dev@taye.me>
  * Open source under the MIT License.
  * https://raw.github.com/taye/interact.js/master/LICENSE
  */
-(function () {
+(function (realWindow) {
     'use strict';
 
-    var document           = window.document,
+    var // get wrapped window if using Shadow DOM polyfill
+        window = (function () {
+            // create a TextNode
+            var el = realWindow.document.createTextNode('');
+
+            // check if it's wrapped by a polyfill
+            if (el.ownerDocument !== realWindow.document
+                && typeof realWindow.wrap === 'function'
+                && realWindow.wrap(el) === el) {
+                // return wrapped window
+                return realWindow.wrap(realWindow);
+            }
+
+            // no Shadow DOM polyfil or native implementation
+            return realWindow;
+        }()),
+
+        document           = window.document,
+        DocumentFragment   = window.DocumentFragment   || blank,
         SVGElement         = window.SVGElement         || blank,
         SVGSVGElement      = window.SVGSVGElement      || blank,
         SVGElementInstance = window.SVGElementInstance || blank,
@@ -9511,8 +9529,8 @@ L.Map.include({
                             && /OS [1-7][^\d]/.test(navigator.appVersion)),
 
         // prefix matchesSelector
-        prefixedMatchesSelector = 'matchesSelector' in Element.prototype?
-                'matchesSelector': 'webkitMatchesSelector' in Element.prototype?
+        prefixedMatchesSelector = 'matches' in Element.prototype?
+                'matches': 'webkitMatchesSelector' in Element.prototype?
                     'webkitMatchesSelector': 'mozMatchesSelector' in Element.prototype?
                         'mozMatchesSelector': 'oMatchesSelector' in Element.prototype?
                             'oMatchesSelector': 'msMatchesSelector',
@@ -9521,8 +9539,8 @@ L.Map.include({
         ie8MatchesSelector,
 
         // native requestAnimationFrame or polyfill
-        reqFrame = window.requestAnimationFrame,
-        cancelFrame = window.cancelAnimationFrame,
+        reqFrame = realWindow.requestAnimationFrame,
+        cancelFrame = realWindow.cancelAnimationFrame,
 
         // Events wrapper
         events = (function () {
@@ -9708,6 +9726,7 @@ L.Map.include({
             : o.nodeType === 1 && typeof o.nodeName === "string");
     }
     function isWindow (thing) { return !!(thing && thing.Window) && (thing instanceof thing.Window); }
+    function isDocFrag (thing) { return !!thing && thing instanceof DocumentFragment; }
     function isArray (thing) {
         return isObject(thing)
                 && (typeof thing.length !== undefined)
@@ -9875,7 +9894,7 @@ L.Map.include({
 
         var rootNode = (node.ownerDocument || node);
 
-        return rootNode.defaultView || rootNode.parentWindow;
+        return rootNode.defaultView || rootNode.parentWindow || window;
     }
 
     function getElementRect (element) {
@@ -10008,7 +10027,7 @@ L.Map.include({
                 : defaultOptions.origin;
 
         if (origin === 'parent') {
-            origin = element.parentNode;
+            origin = parentElement(element);
         }
         else if (origin === 'self') {
             origin = interactable.getRect(element);
@@ -10051,26 +10070,40 @@ L.Map.include({
     }
 
     function nodeContains (parent, child) {
-        while ((child = child.parentNode)) {
-
+        while (child) {
             if (child === parent) {
                 return true;
             }
+
+            child = child.parentNode;
         }
 
         return false;
     }
 
     function closest (child, selector) {
-        var parent = child.parentNode;
+        var parent = parentElement(child);
 
         while (isElement(parent)) {
             if (matchesSelector(parent, selector)) { return parent; }
 
-            parent = parent.parentNode;
+            parent = parentElement(parent);
         }
 
         return null;
+    }
+
+    function parentElement (node) {
+        var parent = node.parentNode;
+
+        if (isDocFrag(parent)) {
+            // skip past #shado-root fragments
+            while ((parent = parent.host) && isDocFrag(parent)) {}
+
+            return parent;
+        }
+
+        return parent;
     }
 
     function inContext (interactable, element) {
@@ -10081,17 +10114,13 @@ L.Map.include({
     function testIgnore (interactable, interactableElement, element) {
         var ignoreFrom = interactable.options.ignoreFrom;
 
-        if (!ignoreFrom
-            // limit test to the interactable's element and its children
-            || !isElement(element) || element === interactableElement.parentNode) {
-            return false;
-        }
+        if (!ignoreFrom || !isElement(element)) { return false; }
 
         if (isString(ignoreFrom)) {
-            return matchesSelector(element, ignoreFrom) || testIgnore(interactable, element.parentNode);
+            return matchesUpTo(element, ignoreFrom, interactableElement);
         }
         else if (isElement(ignoreFrom)) {
-            return element === ignoreFrom || nodeContains(ignoreFrom, element);
+            return nodeContains(ignoreFrom, element);
         }
 
         return false;
@@ -10102,16 +10131,13 @@ L.Map.include({
 
         if (!allowFrom) { return true; }
 
-        // limit test to the interactable's element and its children
-        if (!isElement(element) || element === interactableElement.parentNode) {
-            return false;
-        }
+        if (!isElement(element)) { return false; }
 
         if (isString(allowFrom)) {
-            return matchesSelector(element, allowFrom) || testAllow(interactable, element.parentNode);
+            return matchesUpTo(element, allowFrom, interactableElement);
         }
         else if (isElement(allowFrom)) {
-            return element === allowFrom || nodeContains(allowFrom, element);
+            return nodeContains(allowFrom, element);
         }
 
         return false;
@@ -10157,8 +10183,8 @@ L.Map.include({
 
     function withinInteractionLimit (interactable, element, action) {
         var options = interactable.options,
-            maxActions = options[action.name + 'Max'],
-            maxPerElement = options[action.name + 'MaxPerElement'],
+            maxActions = options[action.name].max,
+            maxPerElement = options[action.name].maxPerElement,
             activeInteractions = 0,
             targetCount = 0,
             targetElementCount = 0;
@@ -10391,6 +10417,9 @@ L.Map.include({
         this.downEvent   = null;    // pointerdown/mousedown/touchstart event
         this.downPointer = {};
 
+        this._eventTarget    = null;
+        this._curEventTarget = null;
+
         this.prevEvent = null;      // previous action event
         this.tapTime   = 0;         // time of the most recent tap event
         this.prevTap   = null;
@@ -10584,7 +10613,7 @@ L.Map.include({
                 pointerIndex = this.addPointer(pointer),
                 action;
 
-            this.holdTimers[pointerIndex] = window.setTimeout(function () {
+            this.holdTimers[pointerIndex] = setTimeout(function () {
                 that.pointerHold(events.useAttachEvent? eventCopy : pointer, eventCopy, eventTarget, curEventTarget);
             }, 600);
 
@@ -10593,7 +10622,7 @@ L.Map.include({
             // Check if the down event hits the current inertia target
             if (this.inertiaStatus.active && this.target.selector) {
                 // climb up the DOM tree from the event target
-                while (element && element !== element.ownerDocument) {
+                while (isElement(element)) {
 
                     // if this element is the current inertia target element
                     if (element === this.element
@@ -10607,7 +10636,7 @@ L.Map.include({
                         this.collectEventTargets(pointer, event, eventTarget, 'down');
                         return;
                     }
-                    element = element.parentNode;
+                    element = parentElement(element);
                 }
             }
 
@@ -10635,19 +10664,14 @@ L.Map.include({
             // update pointer coords for defaultActionChecker to use
             this.setEventXY(this.curCoords, pointer);
 
-            if (this.matches.length && this.mouse) {
+            while (isElement(element) && !action) {
+                this.matches = [];
+                this.matchElements = [];
+
+                interactables.forEachSelector(pushMatches);
+
                 action = this.validateSelector(pointer, this.matches, this.matchElements);
-            }
-            else {
-                while (element && element !== element.ownerDocument && !action) {
-                    this.matches = [];
-                    this.matchElements = [];
-
-                    interactables.forEachSelector(pushMatches);
-
-                    action = this.validateSelector(pointer, this.matches, this.matchElements);
-                    element = element.parentNode;
-                }
+                element = parentElement(element);
             }
 
             if (action) {
@@ -10834,7 +10858,7 @@ L.Map.include({
          * action must be enabled for the target Interactable and an appropriate number
          * of pointers must be held down – 1 for drag/resize, 2 for gesture.
          *
-         * Use it with interactable.<action>able({ manualStart: false }) to always
+         * Use it with `interactable.<action>able({ manualStart: false })` to always
          * [start actions manually](https://github.com/taye/interact.js/issues/114)
          *
          - action       (object)  The action to be performed - drag, resize, etc.
@@ -10856,7 +10880,7 @@ L.Map.include({
          |                         event.interactable,
          |                         event.currentTarget);
          |     }
-         });
+         | });
         \*/
         start: function (action, interactable, element) {
             if (this.interacting()
@@ -10901,7 +10925,7 @@ L.Map.include({
 
             if (!duplicateMove && (!this.pointerIsDown || this.pointerWasMoved)) {
                 if (this.pointerIsDown) {
-                    window.clearTimeout(this.holdTimers[pointerIndex]);
+                    clearTimeout(this.holdTimers[pointerIndex]);
                 }
 
                 this.collectEventTargets(pointer, event, eventTarget, 'move');
@@ -10944,7 +10968,7 @@ L.Map.include({
                             var element = eventTarget;
 
                             // check element interactables
-                            while (element && element !== element.ownerDocument) {
+                            while (isElement(element)) {
                                 var elementInteractable = interactables.get(element);
 
                                 if (elementInteractable
@@ -10959,7 +10983,7 @@ L.Map.include({
                                     break;
                                 }
 
-                                element = element.parentNode;
+                                element = parentElement(element);
                             }
 
                             // if there's no drag from element interactables,
@@ -10987,7 +11011,7 @@ L.Map.include({
 
                                 element = eventTarget;
 
-                                while (element && element !== element.ownerDocument) {
+                                while (isElement(element)) {
                                     var selectorInteractable = interactables.forEachSelector(getDraggable);
 
                                     if (selectorInteractable) {
@@ -10997,7 +11021,7 @@ L.Map.include({
                                         break;
                                     }
 
-                                    element = element.parentNode;
+                                    element = parentElement(element);
                                 }
                             }
                         }
@@ -11008,7 +11032,7 @@ L.Map.include({
 
                 if (starting
                     && (this.target.options[this.prepared.name].manualStart
-                        || !withinInteractionLimit(this.target, this.element, this.prepared.name))) {
+                        || !withinInteractionLimit(this.target, this.element, this.prepared))) {
                     this.stop();
                     return;
                 }
@@ -11150,7 +11174,7 @@ L.Map.include({
         pointerUp: function (pointer, event, eventTarget, curEventTarget) {
             var pointerIndex = this.mouse? 0 : indexOf(this.pointerIds, getPointerId(pointer));
 
-            window.clearTimeout(this.holdTimers[pointerIndex]);
+            clearTimeout(this.holdTimers[pointerIndex]);
 
             this.collectEventTargets(pointer, event, eventTarget, 'up' );
             this.collectEventTargets(pointer, event, eventTarget, 'tap');
@@ -11163,7 +11187,7 @@ L.Map.include({
         pointerCancel: function (pointer, event, eventTarget, curEventTarget) {
             var pointerIndex = this.mouse? 0 : indexOf(this.pointerIds, getPointerId(pointer));
 
-            window.clearTimeout(this.holdTimers[pointerIndex]);
+            clearTimeout(this.holdTimers[pointerIndex]);
 
             this.collectEventTargets(pointer, event, eventTarget, 'cancel');
             this.pointerEnd(pointer, event, eventTarget, curEventTarget);
@@ -11778,7 +11802,7 @@ L.Map.include({
 
                 interactables.forEachSelector(collectSelectors);
 
-                element = element.parentNode;
+                element = parentElement(element);
             }
 
             // create the tap event even if there are no listeners so that
@@ -11825,9 +11849,11 @@ L.Map.include({
                 pointerEvent.dt = pointerEvent.timeStamp - this.downTimes[pointerIndex];
 
                 interval = pointerEvent.timeStamp - this.tapTime;
-                createNewDoubleTap = (this.prevTap && this.prevTap.type !== 'doubletap'
+                createNewDoubleTap = !!(this.prevTap && this.prevTap.type !== 'doubletap'
                        && this.prevTap.target === pointerEvent.target
                        && interval < 500);
+
+                pointerEvent.double = createNewDoubleTap;
 
                 this.tapTime = pointerEvent.timeStamp;
             }
@@ -12036,7 +12062,7 @@ L.Map.include({
 
             if (isString(restriction)) {
                 if (restriction === 'parent') {
-                    restriction = this.element.parentNode;
+                    restriction = parentElement(this.element);
                 }
                 else if (restriction === 'self') {
                     restriction = target.getRect(this.element);
@@ -12128,6 +12154,11 @@ L.Map.include({
 
             status.lambda_v0 = lambda / status.v0;
             status.one_ve_v0 = 1 - inertiaOptions.endSpeed / status.v0;
+        },
+
+        _updateEventTargets: function (currentTarget, target) {
+            this._eventTarget    = target;
+            this._curEventTarget = currentTarget;
         }
 
     };
@@ -12161,7 +12192,7 @@ L.Map.include({
 
                             return interaction;
                         }
-                        element = element.parentNode;
+                        element = parentElement(element);
                     }
                 }
             }
@@ -12225,7 +12256,9 @@ L.Map.include({
     function doOnInteractions (method) {
         return (function (event) {
             var interaction,
-                eventTarget = getActualElement(event.target),
+                eventTarget = getActualElement(event.path
+                                               ? event.path[0]
+                                               : event.target),
                 curEventTarget = getActualElement(event.currentTarget),
                 i;
 
@@ -12238,6 +12271,8 @@ L.Map.include({
                     interaction = getInteractionFromPointer(pointer, event.type, eventTarget);
 
                     if (!interaction) { continue; }
+
+                    interaction._updateEventTargets(eventTarget, curEventTarget);
 
                     interaction[method](pointer, event, eventTarget, curEventTarget);
                 }
@@ -12261,6 +12296,8 @@ L.Map.include({
                 interaction = getInteractionFromPointer(event, event.type, eventTarget);
 
                 if (!interaction) { return; }
+
+                interaction._updateEventTargets(eventTarget, curEventTarget);
 
                 interaction[method](event, event, eventTarget, curEventTarget);
             }
@@ -12613,7 +12650,10 @@ L.Map.include({
     function delegateListener (event, useCapture) {
         var fakeEvent = {},
             delegated = delegatedEvents[event.type],
-            element = event.target;
+            eventTarget = getActualElement(event.path
+                                           ? event.path[0]
+                                           : event.target),
+            element = eventTarget;
 
         useCapture = useCapture? true: false;
 
@@ -12626,13 +12666,13 @@ L.Map.include({
         fakeEvent.preventDefault = preventOriginalDefault;
 
         // climb up document tree looking for selector matches
-        while (element && (element.ownerDocument && element !== element.ownerDocument)) {
+        while (isElement(element)) {
             for (var i = 0; i < delegated.selectors.length; i++) {
                 var selector = delegated.selectors[i],
                     context = delegated.contexts[i];
 
                 if (matchesSelector(element, selector)
-                    && nodeContains(context, event.target)
+                    && nodeContains(context, eventTarget)
                     && nodeContains(context, element)) {
 
                     var listeners = delegated.listeners[i];
@@ -12647,7 +12687,7 @@ L.Map.include({
                 }
             }
 
-            element = element.parentNode;
+            element = parentElement(element);
         }
     }
 
@@ -13812,7 +13852,7 @@ L.Map.include({
 
             if (isObject(eventType)) {
                 for (var prop in eventType) {
-                    interact.on(prop, eventType[prop], listener);
+                    this.on(prop, eventType[prop], listener);
                 }
 
                 return this;
@@ -13906,7 +13946,7 @@ L.Map.include({
 
             if (isObject(eventType)) {
                 for (var prop in eventType) {
-                    interact.off(prop, eventType[prop], listener);
+                    this.off(prop, eventType[prop], listener);
                 }
 
                 return this;
@@ -14106,11 +14146,11 @@ L.Map.include({
     }
 
     Interactable.prototype.snap = warnOnce(Interactable.prototype.snap,
-         'Interactable#snap is deprecated. See the new documentation for snapping at http://interactjs.io/docs/#snap');
+         'Interactable#snap is deprecated. See the new documentation for snapping at http://interactjs.io/docs/snapping');
     Interactable.prototype.restrict = warnOnce(Interactable.prototype.restrict,
-         'Interactable#restrict is deprecated. See the new documentation for resticting at http://interactjs.io/docs/#restrict');
+         'Interactable#restrict is deprecated. See the new documentation for resticting at http://interactjs.io/docs/restriction');
     Interactable.prototype.inertia = warnOnce(Interactable.prototype.inertia,
-         'Interactable#inertia is deprecated. See the new documentation for inertia at http://interactjs.io/docs/#inertia');
+         'Interactable#inertia is deprecated. See the new documentation for inertia at http://interactjs.io/docs/inertia');
     Interactable.prototype.autoScroll = warnOnce(Interactable.prototype.autoScroll,
          'Interactable#autoScroll is deprecated. See the new documentation for autoScroll at http://interactjs.io/docs/#autoscroll');
 
@@ -14614,7 +14654,28 @@ L.Map.include({
             return ie8MatchesSelector(element, selector, nodeList);
         }
 
+        // remove /deep/ from selectors if shadowDOM polyfill is used
+        if (window !== realWindow) {
+            selector = selector.replace(/\/deep\//g, ' ');
+        }
+
         return element[prefixedMatchesSelector](selector);
+    }
+
+    function matchesUpTo (element, selector, limit) {
+        while (isElement(element)) {
+            if (matchesSelector(element, selector)) {
+                return true;
+            }
+
+            element = parentElement(element);
+
+            if (element === limit) {
+                return matchesSelector(element, selector);
+            }
+        }
+
+        return false;
     }
 
     // For IE8's lack of an Element#matchesSelector
@@ -14638,16 +14699,16 @@ L.Map.include({
         var lastTime = 0,
             vendors = ['ms', 'moz', 'webkit', 'o'];
 
-        for(var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
-            reqFrame = window[vendors[x]+'RequestAnimationFrame'];
-            cancelFrame = window[vendors[x]+'CancelAnimationFrame'] || window[vendors[x]+'CancelRequestAnimationFrame'];
+        for(var x = 0; x < vendors.length && !realWindow.requestAnimationFrame; ++x) {
+            reqFrame = realWindow[vendors[x]+'RequestAnimationFrame'];
+            cancelFrame = realWindow[vendors[x]+'CancelAnimationFrame'] || realWindow[vendors[x]+'CancelRequestAnimationFrame'];
         }
 
         if (!reqFrame) {
             reqFrame = function(callback) {
                 var currTime = new Date().getTime(),
                     timeToCall = Math.max(0, 16 - (currTime - lastTime)),
-                    id = window.setTimeout(function() { callback(currTime + timeToCall); },
+                    id = setTimeout(function() { callback(currTime + timeToCall); },
                   timeToCall);
                 lastTime = currTime + timeToCall;
                 return id;
@@ -14677,10 +14738,10 @@ L.Map.include({
         });
     }
     else {
-        window.interact = interact;
+        realWindow.interact = interact;
     }
 
-} ());
+} (window));
 
 (function() {
   "use strict";
@@ -14731,39 +14792,87 @@ L.Map.include({
       //
       "get" : function get(key) {
 
-        this.fire("get:" + key, {
-          "value" : data[key]
-        });
+        if (key) {
+          this.fire("get:" + key, {
+            "value" : data[key]
+          });
 
-        this.fire("get", {
-          "value" : data[key],
-          "key"   : key
-        });
+          this.fire("get", {
+            "value" : data[key],
+            "key"   : key,
+            "data"  : data
+          });
 
-        return data[key];
+          return data[key];
+        } else {
+
+          for (var i in data) {
+            if (data.hasOwnProperty(i)) {
+
+              this.fire("get:" + i, {
+                "value" : data[i]
+              });
+
+            }
+          }
+
+          this.fire("get", {
+            "data"   : data
+          });
+
+          return data;
+
+        }
 
       },
 
       //
       // Sets a value by key
       //
-      "set" : function get(key, value) {
+      "set" : function set(key, value) {
 
-        var old = data[key];
+        var old;
 
-        data[key] = value;
+        if (typeof key === "string") {
 
-        this.fire("set:" + key, {
-          "value" : data[key]
-        });
+          old = data[key];
 
-        this.fire("set", {
-          "value"    : data[key],
-          "oldValue" : old,
-          "key"      : key
-        });
+          data[key] = value;
 
-        return data[key];
+          this.fire("set:" + key, {
+            "value" : data[key]
+          });
+
+          this.fire("set", {
+            "value"    : data[key],
+            "oldValue" : old,
+            "key"      : key,
+            "data"     : data
+          });
+
+          return data[key];
+
+        } else if(typeof key === "object") {
+
+          old = JSON.parse(JSON.stringify(data));
+          data = key;
+
+          for (var i in old) {
+            if (old.hasOwnProperty(i)) {
+              this.fire("set:" + i, {
+                "value" : data[i]
+              });
+            }
+          }
+
+          this.fire("set", {
+            "data" : key,
+            "old"  : old
+          });
+
+          return data;
+
+        }
 
       }
     };
@@ -15451,7 +15560,7 @@ L.MarkerClusterGroup = L.FeatureGroup.extend({
 	_defaultIconCreateFunction: function (cluster) {
 		var childCount = cluster.getChildCount();
 
-		var c = ' marker-cluster-';
+		var c = ' marker-stamen-cluster-';
 		if (childCount < 10) {
 			c += 'small';
 		} else if (childCount < 100) {
@@ -15460,7 +15569,7 @@ L.MarkerClusterGroup = L.FeatureGroup.extend({
 			c += 'large';
 		}
 
-		return new L.DivIcon({ html: '<div><span>' + childCount + '</span></div>', className: 'marker-cluster' + c, iconSize: new L.Point(40, 40) });
+		return new L.DivIcon({ html: '<div class="innerMarker" style="background-color:' + cluster._group.options.polygonOptions.color + ';color:white;opacity:0.5;text-shadow:1px 1px 1px rgba(0,0,0,1);border:none;"><span>' + childCount + '</span></div>', className: 'marker-cluster' + c, iconSize: new L.Point(40, 40) });
 	},
 
 	_bindEvents: function () {
@@ -15481,8 +15590,6 @@ L.MarkerClusterGroup = L.FeatureGroup.extend({
 			map.on('zoomend', this._hideCoverage, this);
 
 			map.on('zoomstart', function () {
-
-				console.log("zoom", this.getLayers());
 
 				var layers  = this.getLayers();
 
@@ -16099,14 +16206,7 @@ L.MarkerCluster = L.Marker.extend({
 		}
 		this._group._featureGroup.addLayer(this);
 
-		var poly = new L.Polygon(this.getConvexHull(), {
-			fillColor   : this._group.options.sColor,
-			fillOpacity : 0.3,
-			color       : this._group.options.sColor,
-			weight      : 0,
-			opacity     : 0.3,
-			className   : "stamen-glob-hulls"
-		});
+		var poly = new L.Polygon(this.getConvexHull(), this._group.options.polygonOptions);
 
 		poly.addTo(this._group);
 	},
@@ -17119,7 +17219,9 @@ L.MarkerClusterGroup.include({
 (function() {
   "use strict";
 
-  function LegendLayerMenu(rootSelector) {
+  function LegendLayerMenu(rootSelector, options) {
+
+    options = options || {};
 
     //
     // Constants
@@ -17128,8 +17230,39 @@ L.MarkerClusterGroup.include({
         rootNode          = document.querySelector(rootSelector), //"#legend-layer-menu",
         layerGroups       = {},
         layers            = {},
+        colors            = ["#2166ac","#b2182b","#f4a582","#4393c3","#67001f","#d1e5f0","#fddbc7","#f7f7f7","#d6604d","#92c5de","#053061"],
+        secondaryColors   = [
+          "#2166ac","#b2182b","#f4a582","#4393c3","#67001f","#d1e5f0","#fddbc7","#f7f7f7","#d6604d","#92c5de","#053061","#8dd3c7","#ffffb3",
+          "#bebada","#fb8072","#80b1d3","#fdb462","#b3de69","#fccde5","#d9d9d9","#bc80bd","#ccebc5","#ffed6f",
+          "#66c2a5","#fc8d62","#8da0cb","#e78ac3","#a6d854","#ffd92f","#e5c494","#b3b3b3",
+          "#e41a1c","#377eb8","#4daf4a","#984ea3","#ff7f00","#ffff33","#a65628","#f781bf","#999999",
+          "#b3e2cd","#fdcdac","#cbd5e8","#f4cae4","#e6f5c9","#fff2ae","#f1e2cc","#cccccc",
+          "#fbb4ae","#b3cde3","#ccebc5","#decbe4","#fed9a6","#ffffcc","#e5d8bd","#fddaec","#f2f2f2",
+          "#a6cee3","#1f78b4","#b2df8a","#33a02c","#fb9a99","#e31a1c","#fdbf6f","#ff7f00","#cab2d6","#6a3d9a","#ffff99","#b15928",
+          "#1b9e77","#d95f02","#7570b3","#e7298a","#66a61e","#e6ab02","#a6761d","#666666",
+          "#7fc97f","#beaed4","#fdc086","#ffff99","#386cb0","#f0027f","#bf5b17","#666666",
+          "#a50026","#d73027","#f46d43","#fdae61","#fee08b","#ffffbf","#d9ef8b","#a6d96a","#66bd63","#1a9850","#006837",
+          "#9e0142","#d53e4f","#f46d43","#fdae61","#fee08b","#ffffbf","#e6f598","#abdda4","#66c2a5","#3288bd","#5e4fa2",
+          "#a50026","#d73027","#f46d43","#fdae61","#fee090","#ffffbf","#e0f3f8","#abd9e9","#74add1","#4575b4","#313695",
+          "#67001f","#b2182b","#d6604d","#f4a582","#fddbc7","#ffffff","#e0e0e0","#bababa","#878787","#4d4d4d","#1a1a1a",
+          "#67001f","#b2182b","#d6604d","#f4a582","#fddbc7","#f7f7f7","#d1e5f0","#92c5de","#4393c3","#2166ac","#053061",
+          "#8e0152","#c51b7d","#de77ae","#f1b6da","#fde0ef","#f7f7f7","#e6f5d0","#b8e186","#7fbc41","#4d9221","#276419",
+          "#40004b","#762a83","#9970ab","#c2a5cf","#e7d4e8","#f7f7f7","#d9f0d3","#a6dba0","#5aae61","#1b7837","#00441b",
+          "#543005","#8c510a","#bf812d","#dfc27d","#f6e8c3","#f5f5f5","#c7eae5","#80cdc1","#35978f","#01665e","#003c30",
+          "#7f3b08","#b35806","#e08214","#fdb863","#fee0b6","#f7f7f7","#d8daeb","#b2abd2","#8073ac","#542788","#2d004b",
+          "#ffffff","#f0f0f0","#d9d9d9","#bdbdbd","#969696","#737373","#525252","#252525","#000000",
+          "#fff5f0","#fee0d2","#fcbba1","#fc9272","#fb6a4a","#ef3b2c","#cb181d","#a50f15","#67000d",
+          "#fff5eb","#fee6ce","#fdd0a2","#fdae6b","#fd8d3c","#f16913","#d94801","#a63603","#7f2704",
+          "#f7fcf5","#e5f5e0","#c7e9c0","#a1d99b","#74c476","#41ab5d","#238b45","#006d2c","#00441b",
+          "#f7fbff","#deebf7","#c6dbef","#9ecae1","#6baed6","#4292c6","#2171b5","#08519c","#08306b",
+          "#fcfbfd","#efedf5","#dadaeb","#bcbddc","#9e9ac8","#807dba","#6a51a3","#54278f","#3f007d",
+          "#ffffe5","#fff7bc","#fee391","#fec44f","#fe9929","#ec7014","#cc4c02","#993404","#662506",
+          "#ffffcc","#ffeda0","#fed976","#feb24c","#fd8d3c","#fc4e2a","#e31a1c","#bd0026","#800026"
+        ],
+        defaultColor      = options.color || "#000",
+        layerLimit        = options.layerLimit || colors.length,
         sortIcon          = [
-              "<svg version=1.1 id=Your_Icon xmlns=http://www.w3.org/2000/svg xmlns:xlink=http://www.w3.org/1999/xlink x=0px y=0px viewBox=\"-568.5 362.1 61.6 46.3\" enable-background=\"new -568.5 362.1 61.6 46.3\" xml:space=preserve class=\"grab\"><g><path d=\"M-507.3,370.4l-7.7-7.9c0,0,0,0,0,0c-0.1-0.1-0.3-0.3-0.5-0.4c0,0-0.1,0-0.1,0c0,0-0.1,0-0.1,0c-0.2,0-0.3-0.1-0.5-0.1",
+              "<svg version=1.1 class=\"drag-icon\" xmlns=http://www.w3.org/2000/svg xmlns:xlink=http://www.w3.org/1999/xlink x=0px y=0px viewBox=\"-568.5 362.1 61.6 46.3\" enable-background=\"new -568.5 362.1 61.6 46.3\" xml:space=preserve class=\"grab\"><g><path d=\"M-507.3,370.4l-7.7-7.9c0,0,0,0,0,0c-0.1-0.1-0.3-0.3-0.5-0.4c0,0-0.1,0-0.1,0c0,0-0.1,0-0.1,0c-0.2,0-0.3-0.1-0.5-0.1",
               "c0,0,0,0,0,0c0,0,0,0,0,0c-0.2,0-0.3,0-0.5,0.1c0,0-0.1,0-0.1,0c-0.2,0.1-0.4,0.2-0.6,0.4l-7.7,7.9c-0.6,0.7-0.6,1.7,0,2.3",
               "c0.3,0.3,0.7,0.5,1.2,0.5c0.4,0,0.9-0.2,1.3-0.5l4.9-5v29.1c0,0.9,0.6,1.7,1.5,1.7c0.9,0,1.5-0.7,1.5-1.7v-29l4.9,4.9",
               "c0.3,0.3,0.8,0.5,1.2,0.5c0.4,0,0.9-0.2,1.2-0.5C-506.7,372.1-506.7,371.1-507.3,370.4z\"/>",
@@ -17141,9 +17274,17 @@ L.MarkerClusterGroup.include({
               "C-522.8,376.8-523.5,375.8-524.5,375.8z\"/><path d=\"M-524.5,390.6h-26.5c-0.9,0-1.7,0.9-1.7,1.9c0,0.9,0.7,1.9,1.7,1.9h26.5c0.9,0,1.7-0.9,1.7-1.9",
               "C-522.8,391.6-523.5,390.6-524.5,390.6z\"/></g></svg>"
             ].join(""),
-        layerTemplate     = "<li class=\"draggable drag-drop layer-item-{id}\" data-id=\"{id}\"> " + sortIcon + "<span class=\"label\">{label}</span></li>",
-        inputFormTemplate = "<div class=\"input-form hidden\"><form class=\"input-form-element\" name=\"{layerid}-input-form\"><input type=\"text\" name=\"uri\" placeholder=\"EcoEnginwel API URI\" value=\"https://dev-ecoengine.berkeley.edu/api/observations/?format=geojson&selected_facets=family_exact%3A%22cricetidae%22&q=&min_date=1960&max_date=1965&page_size=100\"><input type=\"text\" name=\"label\" placeholder=\"A name for this layer\"><button>Add</button></form></div>",
-        i, dragConfig, oldParent, dropConfig, orderCache;
+        deleteIcon        = [
+              "<svg class=\"delete-icon\" version=\"1.1\" id=\"Layer_1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" x=\"0px\" y=\"0px\"",
+              "viewBox=\"18.3 -2.1 93.6 92.3\" enable-background=\"new 18.3 -2.1 93.6 92.3\" xml:space=\"preserve\">",
+              "<path d=\"M27.9-2.1l-8.4,8.4l4.2,4.2l33.6,33.6L23.7,77.7l-4.2,4.2l8.4,8.4l4.2-4.2l33.6-33.6l33.6,33.6l4.2,4.2l8.4-8.4l-4.2-4.2",
+              "L74,44.1l33.6-33.6l4.2-4.2l-8.4-8.4l-4.2,4.2L65.7,35.7L32.1,2.1C32.1,2.1,27.9-2.1,27.9-2.1z\"/>",
+              "</svg>"
+        ].join(""),
+        layerTemplate       = "<li class=\"draggable drag-drop layer-item-{id}\" data-id=\"{id}\" data-color=\"{color}\" data-list=\"{list}\" data-label=\"{label}\" data-uri=\"{uri}\"> " + sortIcon + "<input type=\"color\" class=\"color-picker\" value=\"{color}\"><span class=\"label\">{label}</span> " + deleteIcon + " </li>",
+        inputFormTemplate   = "<div class=\"input-form hidden\"><form class=\"input-form-element\" name=\"{layerid}-input-form\"><input type=\"text\" name=\"uri\" placeholder=\"EcoEnginwel API URI\" value=\"https://dev-ecoengine.berkeley.edu/api/observations/?format=geojson&selected_facets=family_exact%3A%22cricetidae%22&q=&min_date=1960&max_date=1965&page_size=100\"><input type=\"text\" name=\"label\" placeholder=\"A name for this layer\"><button>Add</button></form></div>",
+        colorPickerTemplate = "<div class=\"color-picker-panel\" style=\"display:none;position:absolute;\">" + colors.map(function(c) {return "<div class=\"color\" style=\"background-color:"+c+";\"></div>"}).join("") + "</div>",
+        i, dragConfig, oldParent, dropConfig, orderCache, inputFormNode;
 
     //
     // Add a default class name
@@ -17162,14 +17303,9 @@ L.MarkerClusterGroup.include({
 
         rootNode.appendChild(event.target);
 
+        //TODO: Stop hard coding the offset
         event.target.setAttribute("data-x", (event.clientX-event.target.offsetLeft+10)-(event.clientX-oLeft));
-        event.target.setAttribute("data-y", (event.clientY-event.target.offsetTop+25)-(event.clientY-oTop));
-
-        /*
-        event.target.style.webkitTransform =
-        event.target.style.transform =
-        "translate(" + (event.pageX-event.target.offsetLeft) + "px, " + (event.pageY-event.target.offsetTop) + "px)";
-        */
+        event.target.setAttribute("data-y", (event.clientY-event.target.offsetTop+60)-(event.clientY-oTop));
 
         event.target.classList.add("dragging");
       },
@@ -17286,6 +17422,42 @@ L.MarkerClusterGroup.include({
       }
     };
 
+    //
+    // Finds a color from the colors array which is not
+    // already being used. If they are all being used, it
+    // returns the default color
+    //
+    function getNewColor() {
+
+      var usedColors = [],
+          element;
+
+      for (var i in layers) {
+        if ( layers.hasOwnProperty(i) ) {
+
+          element = layers[i].element();
+
+          if (element && element.getAttribute("data-color")) {
+            usedColors.push(element.getAttribute("data-color"));
+          }
+
+        }
+      }
+
+      for (var i=0; colors.length > i; i++) {
+        if ( usedColors.indexOf( colors[ i ] ) < 0 ) {
+          return colors[i];
+        }
+      }
+
+      return defaultColor;
+
+    }
+    window.getNewColor = getNewColor;
+
+    //
+    // Emits the orderChanged event
+    //
     function triggerOrderChange() {
       var order = getLayerOrder();
 
@@ -17299,12 +17471,7 @@ L.MarkerClusterGroup.include({
           //
 
           if (!interactObject.list) {
-            return {
-              "id"    : interactObject.element().getAttribute("data-id"),
-              "list"  : interactObject.element().getAttribute("data-list"),
-              "label" : interactObject.element().getAttribute("data-label"),
-              "uri"   : interactObject.element().getAttribute("data-uri")
-            }
+            return getLayerObjectFromLayerElement(interactObject.element());
           } else {
             return interactObject;
           }
@@ -17317,6 +17484,12 @@ L.MarkerClusterGroup.include({
       }
     }
 
+    //
+    // Return layers in order. Currently deturmined by their order
+    // in the DOM.
+    // TODO: optionally read order from a data attribute on the layer
+    //       element
+    //
     function getLayerOrder() {
       var layerNodes   = rootNode.querySelectorAll(".draggable"),
           rasterLayers = rootNode.querySelectorAll("select"),
@@ -17380,6 +17553,9 @@ L.MarkerClusterGroup.include({
         return newId;
     }
 
+    //
+    // Appends a markup string to the DOM as DOM elements
+    //
     function append(rootNode, html) {
       var div = document.createElement("div");
       div.innerHTML = html;
@@ -17390,6 +17566,11 @@ L.MarkerClusterGroup.include({
       return rootNode;
     }
 
+    //
+    // Return the parent of this element which has the passed class. if
+    // the startingElement has the class it will be returned. The depth
+    // defaults to 10
+    //
     function parentHasClass(startingElement, className, depth) {
 
       var last  = startingElement;
@@ -17421,7 +17602,7 @@ L.MarkerClusterGroup.include({
 
     function promptUserForLayerData(buttonNode, callback) {
 
-      var inputFormNode = buttonNode.parentNode.querySelector(".input-form");
+      inputFormNode = buttonNode.parentNode.querySelector(".input-form");
 
       //
       // Rise above!
@@ -17477,46 +17658,139 @@ L.MarkerClusterGroup.include({
 
     }
 
-    function createLayer (layerNode) {
+    function createLayer (layerObject) {
+
+      var layerNode;
+
+      layerObject.id = getUniqueId();
+
+      //
+      // Append new layer item in menu
+      //
+      append(
+        getLayerGroupNode(layerObject.list),
+        processTemplate(layerTemplate, layerObject)
+      );
+
+      layerNode = rootNode.querySelector(".layer-item-" + layerObject.id);
+
       layers[layerNode.getAttribute("data-id")] = interact(layerNode).draggable(dragConfig).dropzone(dropConfig);
 
-      that.fire("layerAdded", {
-        "list"  : layerNode.getAttribute("data-list"),
-        "label" : layerNode.getAttribute("data-label"),
-        "uri"   : layerNode.getAttribute("data-uri"),
-        "id"    : layerNode.getAttribute("data-id")
+      layerNode.addEventListener("click", function(e) {
+
+        if (e.target.classList.contains("delete-icon")) {
+
+          e.preventDefault();
+
+          var layerElement = e.target.parentNode;
+
+          layerElement.parentNode.removeChild(layerElement);
+          triggerOrderChange();
+        }
+
+      });
+
+      that.fire("layerAdded", getLayerObjectFromLayerElement(layerNode));
+    }
+
+    //
+    // Builds an object from data attributes in the layer
+    // element
+    //
+    function getLayerObjectFromLayerElement (element) {
+      return {
+        "list"    : element.getAttribute("data-list"),
+        "label"   : element.getAttribute("data-label"),
+        "uri"     : element.getAttribute("data-uri"),
+        "id"      : element.getAttribute("data-id"),
+        "color"   : element.getAttribute("data-color"),
+        "element" : element
+      };
+    }
+
+    //
+    // Returns full ui state object
+    //
+    function getMenuState() {
+      return Object.keys(layers).map(function(key) {
+        return getLayerObjectFromLayerElement(layers[key].element());
       });
     }
 
     function onClickLayerAddAction (e) {
       promptUserForLayerData(e.target, function() {
         var formNode     = e.target.parentNode.querySelector("form"),
-            layerId      = getUniqueId(),
-            layerGroupId = e.target.getAttribute("data-for"),
-            layerNode;
-
-        //
-        // Append new layer item in menu
-        //
-        append(
-          getLayerGroupNode(e.target.getAttribute("data-for")),
-          processTemplate(layerTemplate, {
-            "label" : formNode.label.value,
-            "id"    : layerId
-          })
-        );
-
-        layerNode = rootNode.querySelector(".layer-item-" + layerId);
-        layerNode.setAttribute("data-list",  layerGroupId);
-        layerNode.setAttribute("data-label", formNode.label.value);
-        layerNode.setAttribute("data-uri",   formNode.uri.value);
+            layerGroupId = e.target.getAttribute("data-for");
 
         //
         // Register new layer
         //
-        createLayer(layerNode, layerGroupId);
+        createLayer({
+          "label" : formNode.label.value,
+          "color" : getNewColor(),
+          "list" : layerGroupId,
+          "uri"   : formNode.uri.value
+        });
 
       });
+    }
+
+    function initColorPicker() {
+
+      //
+      // Test for native color picker support
+      //
+      var input   = document.createElement("input"),
+          isSupported;
+
+      //
+      // Test for native color picker support
+      // Test inspired by https://bgrins.github.io/spectrum/
+      //
+      input.type  = "color";
+      input.value = "!";
+      isSupported = (input.type === "color" && input.type !== "!");
+
+      //
+      // If isSupported is true, this browser supports native color
+      // picking using the input[type=color] element
+      //
+      that.on("layerAdded", function(layer) {
+        var pickerNode = layer.caller.element.querySelector(".color-picker"),
+            panelNode  = document.querySelector(".color-picker-panel");
+
+        if (isSupported) {
+
+          pickerNode.addEventListener("change", function(e) {
+            e.target.parentNode.setAttribute("data-color", e.target.value);
+
+            that.fire("color-change", getLayerObjectFromLayerElement(e.target.parentNode));
+          });
+        } else {
+
+          pickerNode.classList.add("polyfill");
+          pickerNode.style.backgroundColor = pickerNode.value;
+          pickerNode.style.cursor = "pointer";
+          pickerNode.style.color = "transparent";
+
+          if (!panelNode) {
+            append(rootNode, processTemplate(colorPickerTemplate, {}));
+            panelNode  = document.querySelector(".color-picker-panel");
+          }
+
+          pickerNode.addEventListener("click", function(e) {
+
+            e.target.parentNode.parentNode.insertBefore(panelNode, e.target.parentNode);
+            e.target.parentNode.parentNode.insertBefore(e.target.parentNode, panelNode); //TODO: There is probably a better way to flip these around
+            panelNode.style.top     = (e.target.parentNode.offsetTop) + "px";
+            panelNode.style.left    = (e.target.parentNode.offsetLeft) + "px";
+            panelNode.style.display = "block";
+            panelNode.setAttribute("data-for", layer.caller.id);
+          });
+
+        }
+      });
+
     }
 
     function init() {
@@ -17545,12 +17819,43 @@ L.MarkerClusterGroup.include({
       }
 
       //
+      // Make layers to match marker state
+      //
+      if (options.menuState && options.menuState.length) {
+        options.menuState.forEach(function (layerObject) {
+
+          createLayer(layerObject);
+
+        });
+      }
+
+      //
       // Handle click events
       //
       rootNode.addEventListener("click", function(e) {
+        var layerObject, layerNode;
 
-        if (e.target.tagName === "BUTTON") {
+        //
+        // Listener for add layer action
+        //
+        if (e.target.classList.contains("add-action")) {
           onClickLayerAddAction.apply(this, arguments);
+        }
+
+        //TODO: Turn this into a color input polyfill module
+        //
+        // Choose a color. This interface is only shown on browsers
+        // which do not support the color input type
+        //
+        if (e.target.classList.contains("color")) {
+          layerObject = layers[e.target.parentNode.getAttribute("data-for")];
+          layerNode   = layerObject.element();
+
+          layerNode.setAttribute("data-color", e.target.style.backgroundColor);
+          e.target.parentNode.style.display = "none";
+          layerNode.querySelector(".color-picker").setAttribute("value", e.target.style.backgroundColor);
+          layerNode.querySelector(".color-picker").style.backgroundColor = e.target.style.backgroundColor;
+          that.fire("color-change", getLayerObjectFromLayerElement(layerNode));
         }
 
       }, false);
@@ -17571,11 +17876,13 @@ L.MarkerClusterGroup.include({
     that.getLayerNode  = getLayerNode;
     that.getLayerOrder = getLayerOrder;
     that.rootNode      = rootNode;
+    that.getMenuState  = getMenuState;
 
     //
     // Here we go
     //
 
+    initColorPicker();
     init();
 
     return that;
@@ -26952,7 +27259,1389 @@ L.MarkerClusterGroup.include({
   if (typeof define === "function" && define.amd) define(d3); else if (typeof module === "object" && module.exports) module.exports = d3;
   this.d3 = d3;
 }();
-/*! leaflet-hexbin.js Version: 0.1.1 */
+/**
+ * @preserve
+ * EightBitColorPicker Library
+ *
+ * Released under the MIT License
+ * https://github.com/bilalq/eight-bit-color-picker/blob/master/LICENSE
+ */
+;(function (root, factory) {
+  /* jshint strict:false */ /* global define:false, module:false*/
+  if (typeof define === 'function' && define.amd) {
+    // Register as an anonymous AMD module
+    define([], factory)
+  } else if (typeof module === 'object' && typeof module.exports === 'object') {
+    // Register CommonJS-ish module (should work with Component & Browserify)
+    module.exports = factory()
+  } else {
+    // Register as a browser global
+    root.EightBitColorPicker = factory()
+  }
+}(this, function() {
+  'use strict';
+
+  /**
+   * Class name used for identifying color picker elements
+   */
+  var className = 'eight-bit-color-picker'
+
+  /**
+   * Helper function to check if the argument is a DOM element object
+   *
+   * @param {Any} el - Object to test
+   * @returns {Mixed} Truthy or false value
+   */
+  var isDOMElement = function(el) {
+    return el && el.nodeType && el.tagName
+  }
+
+  /**
+   * Generates a random color from 0-255
+   *
+   * @returns {Number}
+   */
+  var randomColor = function() {
+    return Math.floor(Math.random() * 256)
+  }
+
+  /**
+   * Checks if color is an integer in the range of 0-255
+   *
+   * @param {Number} color
+   * @returns {Boolean}
+   */
+  var isColorInRange = function(color) {
+    return (
+      typeof color === 'number' &&
+      Math.floor(color) === color &&
+      color >= 0 &&
+      color <= 255
+    )
+  }
+
+  /**
+   * Default color palette used by the widget
+   */
+  var defaultPalette = [
+    '#400000', '#400000', '#400900', '#234000', '#004000', '#004000', '#004000',
+    '#000d40', '#000040', '#000040', '#000040', '#000040', '#280040', '#400003',
+    '#400000', '#000000', '#540000', '#540000', '#541d00', '#375400', '#005400',
+    '#005400', '#005402', '#002154', '#000054', '#000054', '#000054', '#000054',
+    '#3c0054', '#540017', '#540000', '#0d0d0d', '#680000', '#680000', '#683100',
+    '#4b6800', '#006800', '#006800', '#006816', '#003568', '#001168', '#000068',
+    '#000068', '#000068', '#500068', '#68002b', '#680000', '#212121', '#7c0000',
+    '#7c0000', '#7c4500', '#5f7c00', '#0b7c00', '#007c00', '#007c2a', '#00497c',
+    '#00257c', '#00007c', '#00007c', '#10007c', '#64007c', '#7c003f', '#7c0000',
+    '#353535', '#900000', '#900400', '#905900', '#739000', '#1f9000', '#009000',
+    '#00903e', '#005d90', '#003990', '#000090', '#000090', '#240090', '#780090',
+    '#900053', '#900000', '#494949', '#a40000', '#a41800', '#a46d00', '#87a400',
+    '#33a400', '#00a400', '#00a452', '#0071a4', '#004da4', '#0000a4', '#0000a4',
+    '#3800a4', '#8c00a4', '#a40067', '#a40013', '#5d5d5d', '#b80000', '#b82c00',
+    '#b88100', '#9bb800', '#47b800', '#00b800', '#00b866', '#0085b8', '#0061b8',
+    '#000db8', '#0000b8', '#4c00b8', '#a000b8', '#b8007b', '#b80027', '#717171',
+    '#cc0000', '#cc4000', '#cc9500', '#afcc00', '#5bcc00', '#06cc00', '#00cc7a',
+    '#0099cc', '#0075cc', '#0021cc', '#0c00cc', '#6000cc', '#b400cc', '#cc008f',
+    '#cc003b', '#858585', '#e00000', '#e05400', '#e0a900', '#c3e000', '#6fe000',
+    '#1ae000', '#00e08e', '#00ade0', '#0089e0', '#0035e0', '#2000e0', '#7400e0',
+    '#c800e0', '#e000a3', '#e0004f', '#999999', '#f41414', '#f46814', '#f4bd14',
+    '#d7f414', '#83f414', '#2ef414', '#14f4a2', '#14c1f4', '#149df4', '#1449f4',
+    '#3414f4', '#8814f4', '#dc14f4', '#f414b7', '#f41463', '#adadad', '#ff2828',
+    '#ff7c28', '#ffd128', '#ebff28', '#97ff28', '#42ff28', '#28ffb6', '#28d5ff',
+    '#28b1ff', '#285dff', '#4828ff', '#9c28ff', '#f028ff', '#ff28cb', '#ff2877',
+    '#c1c1c1', '#ff3c3c', '#ff903c', '#ffe53c', '#ffff3c', '#abff3c', '#56ff3c',
+    '#3cffca', '#3ce9ff', '#3cc5ff', '#3c71ff', '#5c3cff', '#b03cff', '#ff3cff',
+    '#ff3cdf', '#ff3c8b', '#d5d5d5', '#ff5050', '#ffa450', '#fff950', '#ffff50',
+    '#bfff50', '#6aff50', '#50ffde', '#50fdff', '#50d9ff', '#5085ff', '#7050ff',
+    '#c450ff', '#ff50ff', '#ff50f3', '#ff509f', '#e9e9e9', '#ff6464', '#ffb864',
+    '#ffff64', '#ffff64', '#d3ff64', '#7eff64', '#64fff2', '#64ffff', '#64edff',
+    '#6499ff', '#8464ff', '#d864ff', '#ff64ff', '#ff64ff', '#ff64b3', '#fdfdfd',
+    '#ff7878', '#ffcc78', '#ffff78', '#ffff78', '#e7ff78', '#92ff78', '#78ffff',
+    '#78ffff', '#78ffff', '#78adff', '#9878ff', '#ec78ff', '#ff78ff', '#ff78ff',
+    '#ff78c7', '#ffffff', '#ff8c8c', '#ffe08c', '#ffff8c', '#ffff8c', '#fbff8c',
+    '#a6ff8c', '#8cffff', '#8cffff', '#8cffff', '#8cc1ff', '#ac8cff', '#ff8cff',
+    '#ff8cff', '#ff8cff', '#ff8cdb', '#ffffff'
+  ]
+
+  /**
+   * Constructor for Color Picker object
+   *
+   * Takes in an options hash with various properties
+   */
+  function EightBitColorPicker(opts) {
+    // Initialize instance variables
+    this.el = isDOMElement(opts.el) ? opts.el : document.getElementById(opts.el)
+    this.palette = opts.palette || defaultPalette
+    this.color = parseInt(opts.color || this.el.dataset.color || randomColor(), 10)
+
+    // Validate own values
+    this.validate()
+
+    // Render color-picker UI
+    render.call(this)
+  }
+
+  // Reference protoype in a variable to improve minification
+  var pickerProto = EightBitColorPicker.prototype
+
+  /**
+   * Renders color-picker UI and modifies the HTML of the element
+   */
+  var render = function() {
+    // Set class on element
+    this.el.classList.add(className)
+
+    // Set inner HTML with subnodes based on a template
+    buildSubNodes.call(this)
+
+    // Populates and builds color map for picker
+    buildColorPickerUI.call(this)
+
+    // Declare exitListener
+    var exitListener
+
+    // Bind listener to show color map on click
+    this.el.addEventListener('click', (function() {
+      this.show()
+
+      // Bind exit listener to hide map when clicked elsewhere
+      if (exitListener) { return }
+      exitListener = (function(e) {
+        if (this.el.contains(e.target)) { return }
+        this.hide()
+        window.removeEventListener('click', exitListener)
+        exitListener = null
+      }).bind(this)
+      window.addEventListener('click', exitListener)
+    }).bind(this))
+  }
+
+  /**
+   * Sets innerHTML of an EightBitColorPicker's element with a template
+   */
+  var buildSubNodes = function() {
+    this.el.innerHTML =
+      '<div class="ebcp-selection" style="background: ' + this.getHexColor() + ';">' +
+        '&nbsp;' +
+      '</div>' +
+      '<div class="ebcp-selector">' +
+        '<div class="ebcp-palette"></div>' +
+        '<div class="ebcp-preview-values">' +
+          '<div class="ebcp-text-container">' +
+            '<input class="ebcp-text ebcp-8bit-color" type="text" value="' +
+              this.get8BitColor() +
+            '">' +
+            '<input readonly type="text" class="ebcp-text ebcp-hex-color" value="' +
+              this.getHexColor() +
+            '">' +
+          '</div>' +
+          '<div class="ebcp-color-preview" style="background: ' + this.getHexColor() + ';">' +
+            '&nbsp;' +
+          '</div>' +
+        '</div>' +
+      '</div>'
+  }
+
+  /**
+   * Convenience proxy to picker element's addEventListener function
+   */
+  pickerProto.addEventListener = function(type, listener, useCapture) {
+    this.el.addEventListener(type, listener, useCapture)
+  }
+
+  /**
+   * Convenience proxy to picker element's removeEventListener function
+   */
+  pickerProto.removeEventListener = function(type, listener, useCapture) {
+    this.el.removeEventListener(type, listener, useCapture)
+  }
+
+  /**
+   * Updates the value of this.color and its representations
+   *
+   * @param {Number|String} color - The color from 0-255 to use
+   * @param {Boolean} [previewOnly] - Only updates preview representation if truthy
+   */
+  pickerProto.updateColor = function(color, previewOnly) {
+    var eightBitColor = parseInt(color, 10)
+      , colorAsString = eightBitColor.toString()
+      , elements = this.loadSelectors()
+    if (!color || !colorAsString.length || colorAsString.length > 3) { return }
+    if (!isColorInRange(eightBitColor)) { return }
+    if (eightBitColor === this.color) { return }
+
+    var twentyFourBitColor = this.palette[eightBitColor]
+
+    // If not preview only, then update this.color & dispatch change event
+    if (!previewOnly) {
+      var event = new CustomEvent('colorChange', { detail: {
+        oldColor: this.color,
+        newColor: eightBitColor,
+        picker: this
+      }})
+      this.color = eightBitColor
+      elements.selectedColor.style.background = twentyFourBitColor
+      this.el.dispatchEvent(event)
+    }
+    elements.eightBitText.value = eightBitColor
+    elements.hexText.value = twentyFourBitColor
+    elements.previewColor.style.background = twentyFourBitColor
+  }
+
+  /**
+   * Restores preview color representations to match the value of this.color
+   */
+  pickerProto.restoreColor = function() {
+    var elements = this.loadSelectors()
+    elements.previewColor.style.background = this.getHexColor()
+    elements.hexText.value = this.getHexColor()
+    elements.eightBitText.value = this.get8BitColor()
+  }
+
+  /**
+   * Updates picker to have a new palette & refreshes color displays
+   *
+   * @returns {Boolean} Whether or not the update operation was successful
+   */
+  pickerProto.updatePalette = function(palette) {
+    if (!EightBitColorPicker.isValidPalette(palette)) {
+      return false
+    }
+
+    // Temporarily set color to undefined to prevent a noop from updateColor
+    var color = this.color
+    this.color = undefined
+
+    // Update the palette to the new value, rebuild the display, & trigger a
+    // color update
+    this.palette = palette
+    buildPalette.call(this)
+    this.updateColor(color)
+
+    return true
+  }
+
+  /**
+   * Loads and caches selectors
+   */
+  pickerProto.loadSelectors = function() {
+    if (this.selectors) { return this.selectors }
+    this.selectors = {
+      selectionUI: this.el.querySelector('.ebcp-selector'),
+      selectedColor: this.el.querySelector('.ebcp-selection'),
+      palette: this.el.querySelector('.ebcp-palette'),
+      eightBitText: this.el.querySelector('.ebcp-8bit-color'),
+      hexText: this.el.querySelector('.ebcp-hex-color'),
+      previewColor: this.el.querySelector('.ebcp-color-preview')
+    }
+    return this.selectors
+  }
+
+  /**
+   * Builds DOM elements to display the color palette
+   */
+  var buildPalette = function() {
+    // Cache selectors
+    var elements = this.loadSelectors()
+
+    // Variables used for generating color map
+    var fragment = document.createDocumentFragment()
+      , row = document.createElement('div')
+      , rowSize = 0
+
+    // Generation of color map
+    this.palette.forEach(function(twentyFourBitColor, eightBitColor) {
+      var colorEl = document.createElement('div')
+      colorEl.dataset.eightBitColor = eightBitColor
+      colorEl.style.background = twentyFourBitColor
+      row.appendChild(colorEl)
+      rowSize += 1
+      if (rowSize % 16 === 0) {
+        row.classList.add('ebcp-palette-row')
+        fragment.appendChild(row)
+        row = document.createElement('div')
+      }
+    })
+
+    // Clear innerHTML of palette and append new fragment
+    elements.palette.innerHTML = ''
+    elements.palette.appendChild(fragment)
+  }
+
+  /**
+   * Builds color map in the DOM and attach event listeners
+   */
+  var buildColorPickerUI = function() {
+    // Maintain reference to this
+    var picker = this
+
+    // Cache selectors
+    var elements = this.loadSelectors()
+
+    // Build the palette
+    buildPalette.call(this)
+
+    // Hover handling for color preview
+    elements.palette.addEventListener('mouseover', function(e) {
+      var eightBitColor = e.target.dataset.eightBitColor
+      picker.updateColor(eightBitColor, true)
+    })
+
+    // Restore preview to selected color when cursor leaves the color map
+    elements.palette.addEventListener('mouseleave', picker.restoreColor.bind(picker))
+
+    // Click handling for color selection
+    elements.palette.addEventListener('click', function(e) {
+      picker.updateColor(e.target.dataset.eightBitColor)
+    })
+
+    // Update color when text input is edited
+    elements.eightBitText.addEventListener('keyup', function(e) {
+      if (e.keyCode >= 33 && e.keyCode <= 40) {
+        // Allow navigation keys
+        return true
+      }
+      picker.updateColor(this.value)
+    })
+
+    // Restore & normalize color when leaving focus of text input
+    elements.eightBitText.addEventListener('blur', picker.restoreColor.bind(picker))
+  }
+
+  /**
+   * Returns a clone of the default color palette
+   *
+   * @returns {String[]}
+   */
+  EightBitColorPicker.getDefaultPalette = function() {
+    return defaultPalette.slice(0)
+  }
+
+  /**
+   * Function which checks if a given palette is valid
+   *
+   * @param {String[]} palette
+   * @returns {Boolean}
+   */
+  EightBitColorPicker.isValidPalette = function(palette) {
+    var colorCheck = RegExp.prototype.test.bind(/^#[a-f0-9]{6}$/)
+    return Array.isArray(palette) && palette.length === 256 &&
+      palette.map(colorCheck).reduce(function(a, b) { return a && b }, true)
+  }
+
+  /**
+   * Function to automatically detect elements with the color picker's class
+   * name and instantiate them. The default color can be customized via a
+   * "data-color" attribute.
+   *
+   * @returns {DOMElement[]}
+   */
+  EightBitColorPicker.detect = function() {
+    var elements = document.getElementsByClassName(className)
+    return Array.prototype.map.call(elements, function(el) {
+      return new EightBitColorPicker({el: el})
+    })
+  }
+
+  /**
+   * Validates that the picker object is instantiated correctly
+   *
+   * @throws Error
+   */
+  pickerProto.validate = function() {
+    var err
+    if (!this.el) { err = 'Element for color picker not found' }
+    if (!isColorInRange(this.color)) { err = 'Color outside the range of 0-255' }
+    if (!this.palette || this.palette.length !== 256) { err = 'Invalid color map set' }
+    if (err) { throw new Error(err) }
+  }
+
+  /**
+   * Displays the color picker selection view
+   */
+  pickerProto.show = function() {
+    var selectionUI = this.loadSelectors().selectionUI
+      , leftOffset = this.el.offsetLeft
+      , topOffset = this.el.offsetTop
+
+    selectionUI.style.left = leftOffset + 40 + 'px'
+    selectionUI.style.top = topOffset + 40 + 'px'
+    selectionUI.classList.add('ebcp-shown-selector')
+  }
+
+  /**
+   * Hides the color picker selection view
+   */
+  pickerProto.hide = function() {
+    var selectionUI = this.loadSelectors().selectionUI
+    selectionUI.classList.remove('ebcp-shown-selector')
+  }
+
+  /**
+   * Returns the element in which the picker was rendered
+   *
+   * @returns {DOMElement}
+   */
+  pickerProto.getElement = function() {
+    return this.el
+  }
+
+  /**
+   * Returns the current color as an integer between 0 and 255
+   *
+   * @returns {Number}
+   */
+  pickerProto.get8BitColor = function() {
+    return this.color
+  }
+
+  /**
+   * Returns the current color in hex format with a leading "#"
+   *
+   * @returns {String}
+   */
+  pickerProto.getHexColor = function() {
+    return this.palette[this.color]
+  }
+
+  /**
+   * Returns the current color as an object with keys "r", "g", and "b". Values
+   * are integers from 0 to 255.
+   *
+   * @returns {Object}
+   */
+  pickerProto.getRGBColor = function() {
+    var hex = this.getHexColor()
+    return {
+      r: parseInt(hex.slice(1, 3), 16),
+      g: parseInt(hex.slice(3, 5), 16),
+      b: parseInt(hex.slice(5, 7), 16)
+    }
+  }
+
+  /**
+   * Returns the terminal escape code sequence to use the current color as a
+   * foreground color.
+   *
+   * @returns {String}
+   */
+  pickerProto.getForegroundEscapeSequence = function() {
+    return '\\x1b[38;5;' + this.get8BitColor() + 'm'
+  }
+
+  /**
+   * Returns the terminal escape code sequence to use the current color as a
+   * background color.
+   *
+   * @returns {String}
+   */
+  pickerProto.getBackgroundEscapeSequence = function() {
+    return '\\x1b[48;5;' + this.get8BitColor() + 'm'
+  }
+
+  /**
+   * Expose constructor function as either AMD or global module
+   */
+  return EightBitColorPicker
+}));
+
+/*!
+	query-string
+	Parse and stringify URL query strings
+	https://github.com/sindresorhus/query-string
+	by Sindre Sorhus
+	MIT License
+*/
+(function () {
+	'use strict';
+	var queryString = {};
+
+	queryString.parse = function (str) {
+		if (typeof str !== 'string') {
+			return {};
+		}
+
+		str = str.trim().replace(/^(\?|#)/, '');
+
+		if (!str) {
+			return {};
+		}
+
+		return str.trim().split('&').reduce(function (ret, param) {
+			var parts = param.replace(/\+/g, ' ').split('=');
+			var key = parts[0];
+			var val = parts[1];
+
+			key = decodeURIComponent(key);
+			// missing `=` should be `null`:
+			// http://w3.org/TR/2012/WD-url-20120524/#collect-url-parameters
+			val = val === undefined ? null : decodeURIComponent(val);
+
+			if (!ret.hasOwnProperty(key)) {
+				ret[key] = val;
+			} else if (Array.isArray(ret[key])) {
+				ret[key].push(val);
+			} else {
+				ret[key] = [ret[key], val];
+			}
+
+			return ret;
+		}, {});
+	};
+
+	queryString.stringify = function (obj) {
+		return obj ? Object.keys(obj).map(function (key) {
+			var val = obj[key];
+
+			if (Array.isArray(val)) {
+				return val.map(function (val2) {
+					return encodeURIComponent(key) + '=' + encodeURIComponent(val2);
+				}).join('&');
+			}
+
+			return encodeURIComponent(key) + '=' + encodeURIComponent(val);
+		}).join('&') : '';
+	};
+
+	if (typeof define === 'function' && define.amd) {
+		define(function() { return queryString; });
+	} else if (typeof module !== 'undefined' && module.exports) {
+		module.exports = queryString;
+	} else {
+		window.queryString = queryString;
+	}
+})();
+
+// Copyright (c) 2013 Pieroxy <pieroxy@pieroxy.net>
+// This work is free. You can redistribute it and/or modify it
+// under the terms of the WTFPL, Version 2
+// For more information see LICENSE.txt or http://www.wtfpl.net/
+//
+// For more information, the home page:
+// http://pieroxy.net/blog/pages/lz-string/testing.html
+//
+// LZ-based compression algorithm, version 1.3.3
+var LZString = {
+  
+  
+  // private property
+  _keyStr : "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",
+  _f : String.fromCharCode,
+  
+  compressToBase64 : function (input) {
+    if (input == null) return "";
+    var output = "";
+    var chr1, chr2, chr3, enc1, enc2, enc3, enc4;
+    var i = 0;
+    
+    input = LZString.compress(input);
+    
+    while (i < input.length*2) {
+      
+      if (i%2==0) {
+        chr1 = input.charCodeAt(i/2) >> 8;
+        chr2 = input.charCodeAt(i/2) & 255;
+        if (i/2+1 < input.length) 
+          chr3 = input.charCodeAt(i/2+1) >> 8;
+        else 
+          chr3 = NaN;
+      } else {
+        chr1 = input.charCodeAt((i-1)/2) & 255;
+        if ((i+1)/2 < input.length) {
+          chr2 = input.charCodeAt((i+1)/2) >> 8;
+          chr3 = input.charCodeAt((i+1)/2) & 255;
+        } else 
+          chr2=chr3=NaN;
+      }
+      i+=3;
+      
+      enc1 = chr1 >> 2;
+      enc2 = ((chr1 & 3) << 4) | (chr2 >> 4);
+      enc3 = ((chr2 & 15) << 2) | (chr3 >> 6);
+      enc4 = chr3 & 63;
+      
+      if (isNaN(chr2)) {
+        enc3 = enc4 = 64;
+      } else if (isNaN(chr3)) {
+        enc4 = 64;
+      }
+      
+      output = output +
+        LZString._keyStr.charAt(enc1) + LZString._keyStr.charAt(enc2) +
+          LZString._keyStr.charAt(enc3) + LZString._keyStr.charAt(enc4);
+      
+    }
+    
+    return output;
+  },
+  
+  decompressFromBase64 : function (input) {
+    if (input == null) return "";
+    var output = "",
+        ol = 0, 
+        output_,
+        chr1, chr2, chr3,
+        enc1, enc2, enc3, enc4,
+        i = 0, f=LZString._f;
+    
+    input = input.replace(/[^A-Za-z0-9\+\/\=]/g, "");
+    
+    while (i < input.length) {
+      
+      enc1 = LZString._keyStr.indexOf(input.charAt(i++));
+      enc2 = LZString._keyStr.indexOf(input.charAt(i++));
+      enc3 = LZString._keyStr.indexOf(input.charAt(i++));
+      enc4 = LZString._keyStr.indexOf(input.charAt(i++));
+      
+      chr1 = (enc1 << 2) | (enc2 >> 4);
+      chr2 = ((enc2 & 15) << 4) | (enc3 >> 2);
+      chr3 = ((enc3 & 3) << 6) | enc4;
+      
+      if (ol%2==0) {
+        output_ = chr1 << 8;
+        
+        if (enc3 != 64) {
+          output += f(output_ | chr2);
+        }
+        if (enc4 != 64) {
+          output_ = chr3 << 8;
+        }
+      } else {
+        output = output + f(output_ | chr1);
+        
+        if (enc3 != 64) {
+          output_ = chr2 << 8;
+        }
+        if (enc4 != 64) {
+          output += f(output_ | chr3);
+        }
+      }
+      ol+=3;
+    }
+    
+    return LZString.decompress(output);
+    
+  },
+
+  compressToUTF16 : function (input) {
+    if (input == null) return "";
+    var output = "",
+        i,c,
+        current,
+        status = 0,
+        f = LZString._f;
+    
+    input = LZString.compress(input);
+    
+    for (i=0 ; i<input.length ; i++) {
+      c = input.charCodeAt(i);
+      switch (status++) {
+        case 0:
+          output += f((c >> 1)+32);
+          current = (c & 1) << 14;
+          break;
+        case 1:
+          output += f((current + (c >> 2))+32);
+          current = (c & 3) << 13;
+          break;
+        case 2:
+          output += f((current + (c >> 3))+32);
+          current = (c & 7) << 12;
+          break;
+        case 3:
+          output += f((current + (c >> 4))+32);
+          current = (c & 15) << 11;
+          break;
+        case 4:
+          output += f((current + (c >> 5))+32);
+          current = (c & 31) << 10;
+          break;
+        case 5:
+          output += f((current + (c >> 6))+32);
+          current = (c & 63) << 9;
+          break;
+        case 6:
+          output += f((current + (c >> 7))+32);
+          current = (c & 127) << 8;
+          break;
+        case 7:
+          output += f((current + (c >> 8))+32);
+          current = (c & 255) << 7;
+          break;
+        case 8:
+          output += f((current + (c >> 9))+32);
+          current = (c & 511) << 6;
+          break;
+        case 9:
+          output += f((current + (c >> 10))+32);
+          current = (c & 1023) << 5;
+          break;
+        case 10:
+          output += f((current + (c >> 11))+32);
+          current = (c & 2047) << 4;
+          break;
+        case 11:
+          output += f((current + (c >> 12))+32);
+          current = (c & 4095) << 3;
+          break;
+        case 12:
+          output += f((current + (c >> 13))+32);
+          current = (c & 8191) << 2;
+          break;
+        case 13:
+          output += f((current + (c >> 14))+32);
+          current = (c & 16383) << 1;
+          break;
+        case 14:
+          output += f((current + (c >> 15))+32, (c & 32767)+32);
+          status = 0;
+          break;
+      }
+    }
+    
+    return output + f(current + 32);
+  },
+  
+
+  decompressFromUTF16 : function (input) {
+    if (input == null) return "";
+    var output = "",
+        current,c,
+        status=0,
+        i = 0,
+        f = LZString._f;
+    
+    while (i < input.length) {
+      c = input.charCodeAt(i) - 32;
+      
+      switch (status++) {
+        case 0:
+          current = c << 1;
+          break;
+        case 1:
+          output += f(current | (c >> 14));
+          current = (c&16383) << 2;
+          break;
+        case 2:
+          output += f(current | (c >> 13));
+          current = (c&8191) << 3;
+          break;
+        case 3:
+          output += f(current | (c >> 12));
+          current = (c&4095) << 4;
+          break;
+        case 4:
+          output += f(current | (c >> 11));
+          current = (c&2047) << 5;
+          break;
+        case 5:
+          output += f(current | (c >> 10));
+          current = (c&1023) << 6;
+          break;
+        case 6:
+          output += f(current | (c >> 9));
+          current = (c&511) << 7;
+          break;
+        case 7:
+          output += f(current | (c >> 8));
+          current = (c&255) << 8;
+          break;
+        case 8:
+          output += f(current | (c >> 7));
+          current = (c&127) << 9;
+          break;
+        case 9:
+          output += f(current | (c >> 6));
+          current = (c&63) << 10;
+          break;
+        case 10:
+          output += f(current | (c >> 5));
+          current = (c&31) << 11;
+          break;
+        case 11:
+          output += f(current | (c >> 4));
+          current = (c&15) << 12;
+          break;
+        case 12:
+          output += f(current | (c >> 3));
+          current = (c&7) << 13;
+          break;
+        case 13:
+          output += f(current | (c >> 2));
+          current = (c&3) << 14;
+          break;
+        case 14:
+          output += f(current | (c >> 1));
+          current = (c&1) << 15;
+          break;
+        case 15:
+          output += f(current | c);
+          status=0;
+          break;
+      }
+      
+      
+      i++;
+    }
+    
+    return LZString.decompress(output);
+    //return output;
+    
+  },
+
+
+  
+  compress: function (uncompressed) {
+    if (uncompressed == null) return "";
+    var i, value,
+        context_dictionary= {},
+        context_dictionaryToCreate= {},
+        context_c="",
+        context_wc="",
+        context_w="",
+        context_enlargeIn= 2, // Compensate for the first entry which should not count
+        context_dictSize= 3,
+        context_numBits= 2,
+        context_data_string="", 
+        context_data_val=0, 
+        context_data_position=0,
+        ii,
+        f=LZString._f;
+    
+    for (ii = 0; ii < uncompressed.length; ii += 1) {
+      context_c = uncompressed.charAt(ii);
+      if (!Object.prototype.hasOwnProperty.call(context_dictionary,context_c)) {
+        context_dictionary[context_c] = context_dictSize++;
+        context_dictionaryToCreate[context_c] = true;
+      }
+      
+      context_wc = context_w + context_c;
+      if (Object.prototype.hasOwnProperty.call(context_dictionary,context_wc)) {
+        context_w = context_wc;
+      } else {
+        if (Object.prototype.hasOwnProperty.call(context_dictionaryToCreate,context_w)) {
+          if (context_w.charCodeAt(0)<256) {
+            for (i=0 ; i<context_numBits ; i++) {
+              context_data_val = (context_data_val << 1);
+              if (context_data_position == 15) {
+                context_data_position = 0;
+                context_data_string += f(context_data_val);
+                context_data_val = 0;
+              } else {
+                context_data_position++;
+              }
+            }
+            value = context_w.charCodeAt(0);
+            for (i=0 ; i<8 ; i++) {
+              context_data_val = (context_data_val << 1) | (value&1);
+              if (context_data_position == 15) {
+                context_data_position = 0;
+                context_data_string += f(context_data_val);
+                context_data_val = 0;
+              } else {
+                context_data_position++;
+              }
+              value = value >> 1;
+            }
+          } else {
+            value = 1;
+            for (i=0 ; i<context_numBits ; i++) {
+              context_data_val = (context_data_val << 1) | value;
+              if (context_data_position == 15) {
+                context_data_position = 0;
+                context_data_string += f(context_data_val);
+                context_data_val = 0;
+              } else {
+                context_data_position++;
+              }
+              value = 0;
+            }
+            value = context_w.charCodeAt(0);
+            for (i=0 ; i<16 ; i++) {
+              context_data_val = (context_data_val << 1) | (value&1);
+              if (context_data_position == 15) {
+                context_data_position = 0;
+                context_data_string += f(context_data_val);
+                context_data_val = 0;
+              } else {
+                context_data_position++;
+              }
+              value = value >> 1;
+            }
+          }
+          context_enlargeIn--;
+          if (context_enlargeIn == 0) {
+            context_enlargeIn = Math.pow(2, context_numBits);
+            context_numBits++;
+          }
+          delete context_dictionaryToCreate[context_w];
+        } else {
+          value = context_dictionary[context_w];
+          for (i=0 ; i<context_numBits ; i++) {
+            context_data_val = (context_data_val << 1) | (value&1);
+            if (context_data_position == 15) {
+              context_data_position = 0;
+              context_data_string += f(context_data_val);
+              context_data_val = 0;
+            } else {
+              context_data_position++;
+            }
+            value = value >> 1;
+          }
+          
+          
+        }
+        context_enlargeIn--;
+        if (context_enlargeIn == 0) {
+          context_enlargeIn = Math.pow(2, context_numBits);
+          context_numBits++;
+        }
+        // Add wc to the dictionary.
+        context_dictionary[context_wc] = context_dictSize++;
+        context_w = String(context_c);
+      }
+    }
+    
+    // Output the code for w.
+    if (context_w !== "") {
+      if (Object.prototype.hasOwnProperty.call(context_dictionaryToCreate,context_w)) {
+        if (context_w.charCodeAt(0)<256) {
+          for (i=0 ; i<context_numBits ; i++) {
+            context_data_val = (context_data_val << 1);
+            if (context_data_position == 15) {
+              context_data_position = 0;
+              context_data_string += f(context_data_val);
+              context_data_val = 0;
+            } else {
+              context_data_position++;
+            }
+          }
+          value = context_w.charCodeAt(0);
+          for (i=0 ; i<8 ; i++) {
+            context_data_val = (context_data_val << 1) | (value&1);
+            if (context_data_position == 15) {
+              context_data_position = 0;
+              context_data_string += f(context_data_val);
+              context_data_val = 0;
+            } else {
+              context_data_position++;
+            }
+            value = value >> 1;
+          }
+        } else {
+          value = 1;
+          for (i=0 ; i<context_numBits ; i++) {
+            context_data_val = (context_data_val << 1) | value;
+            if (context_data_position == 15) {
+              context_data_position = 0;
+              context_data_string += f(context_data_val);
+              context_data_val = 0;
+            } else {
+              context_data_position++;
+            }
+            value = 0;
+          }
+          value = context_w.charCodeAt(0);
+          for (i=0 ; i<16 ; i++) {
+            context_data_val = (context_data_val << 1) | (value&1);
+            if (context_data_position == 15) {
+              context_data_position = 0;
+              context_data_string += f(context_data_val);
+              context_data_val = 0;
+            } else {
+              context_data_position++;
+            }
+            value = value >> 1;
+          }
+        }
+        context_enlargeIn--;
+        if (context_enlargeIn == 0) {
+          context_enlargeIn = Math.pow(2, context_numBits);
+          context_numBits++;
+        }
+        delete context_dictionaryToCreate[context_w];
+      } else {
+        value = context_dictionary[context_w];
+        for (i=0 ; i<context_numBits ; i++) {
+          context_data_val = (context_data_val << 1) | (value&1);
+          if (context_data_position == 15) {
+            context_data_position = 0;
+            context_data_string += f(context_data_val);
+            context_data_val = 0;
+          } else {
+            context_data_position++;
+          }
+          value = value >> 1;
+        }
+        
+        
+      }
+      context_enlargeIn--;
+      if (context_enlargeIn == 0) {
+        context_enlargeIn = Math.pow(2, context_numBits);
+        context_numBits++;
+      }
+    }
+    
+    // Mark the end of the stream
+    value = 2;
+    for (i=0 ; i<context_numBits ; i++) {
+      context_data_val = (context_data_val << 1) | (value&1);
+      if (context_data_position == 15) {
+        context_data_position = 0;
+        context_data_string += f(context_data_val);
+        context_data_val = 0;
+      } else {
+        context_data_position++;
+      }
+      value = value >> 1;
+    }
+    
+    // Flush the last char
+    while (true) {
+      context_data_val = (context_data_val << 1);
+      if (context_data_position == 15) {
+        context_data_string += f(context_data_val);
+        break;
+      }
+      else context_data_position++;
+    }
+    return context_data_string;
+  },
+  
+  decompress: function (compressed) {
+    if (compressed == null) return "";
+    if (compressed == "") return null;
+    var dictionary = [],
+        next,
+        enlargeIn = 4,
+        dictSize = 4,
+        numBits = 3,
+        entry = "",
+        result = "",
+        i,
+        w,
+        bits, resb, maxpower, power,
+        c,
+        f = LZString._f,
+        data = {string:compressed, val:compressed.charCodeAt(0), position:32768, index:1};
+    
+    for (i = 0; i < 3; i += 1) {
+      dictionary[i] = i;
+    }
+    
+    bits = 0;
+    maxpower = Math.pow(2,2);
+    power=1;
+    while (power!=maxpower) {
+      resb = data.val & data.position;
+      data.position >>= 1;
+      if (data.position == 0) {
+        data.position = 32768;
+        data.val = data.string.charCodeAt(data.index++);
+      }
+      bits |= (resb>0 ? 1 : 0) * power;
+      power <<= 1;
+    }
+    
+    switch (next = bits) {
+      case 0: 
+          bits = 0;
+          maxpower = Math.pow(2,8);
+          power=1;
+          while (power!=maxpower) {
+            resb = data.val & data.position;
+            data.position >>= 1;
+            if (data.position == 0) {
+              data.position = 32768;
+              data.val = data.string.charCodeAt(data.index++);
+            }
+            bits |= (resb>0 ? 1 : 0) * power;
+            power <<= 1;
+          }
+        c = f(bits);
+        break;
+      case 1: 
+          bits = 0;
+          maxpower = Math.pow(2,16);
+          power=1;
+          while (power!=maxpower) {
+            resb = data.val & data.position;
+            data.position >>= 1;
+            if (data.position == 0) {
+              data.position = 32768;
+              data.val = data.string.charCodeAt(data.index++);
+            }
+            bits |= (resb>0 ? 1 : 0) * power;
+            power <<= 1;
+          }
+        c = f(bits);
+        break;
+      case 2: 
+        return "";
+    }
+    dictionary[3] = c;
+    w = result = c;
+    while (true) {
+      if (data.index > data.string.length) {
+        return "";
+      }
+      
+      bits = 0;
+      maxpower = Math.pow(2,numBits);
+      power=1;
+      while (power!=maxpower) {
+        resb = data.val & data.position;
+        data.position >>= 1;
+        if (data.position == 0) {
+          data.position = 32768;
+          data.val = data.string.charCodeAt(data.index++);
+        }
+        bits |= (resb>0 ? 1 : 0) * power;
+        power <<= 1;
+      }
+
+      switch (c = bits) {
+        case 0: 
+          bits = 0;
+          maxpower = Math.pow(2,8);
+          power=1;
+          while (power!=maxpower) {
+            resb = data.val & data.position;
+            data.position >>= 1;
+            if (data.position == 0) {
+              data.position = 32768;
+              data.val = data.string.charCodeAt(data.index++);
+            }
+            bits |= (resb>0 ? 1 : 0) * power;
+            power <<= 1;
+          }
+
+          dictionary[dictSize++] = f(bits);
+          c = dictSize-1;
+          enlargeIn--;
+          break;
+        case 1: 
+          bits = 0;
+          maxpower = Math.pow(2,16);
+          power=1;
+          while (power!=maxpower) {
+            resb = data.val & data.position;
+            data.position >>= 1;
+            if (data.position == 0) {
+              data.position = 32768;
+              data.val = data.string.charCodeAt(data.index++);
+            }
+            bits |= (resb>0 ? 1 : 0) * power;
+            power <<= 1;
+          }
+          dictionary[dictSize++] = f(bits);
+          c = dictSize-1;
+          enlargeIn--;
+          break;
+        case 2: 
+          return result;
+      }
+      
+      if (enlargeIn == 0) {
+        enlargeIn = Math.pow(2, numBits);
+        numBits++;
+      }
+      
+      if (dictionary[c]) {
+        entry = dictionary[c];
+      } else {
+        if (c === dictSize) {
+          entry = w + w.charAt(0);
+        } else {
+          return null;
+        }
+      }
+      result += entry;
+      
+      // Add w+entry[0] to the dictionary.
+      dictionary[dictSize++] = w + entry.charAt(0);
+      enlargeIn--;
+      
+      w = entry;
+      
+      if (enlargeIn == 0) {
+        enlargeIn = Math.pow(2, numBits);
+        numBits++;
+      }
+      
+    }
+  }
+};
+
+if( typeof module !== 'undefined' && module != null ) {
+  module.exports = LZString
+}
+
+(function(window) {
+	var HAS_HASHCHANGE = (function() {
+		var doc_mode = window.documentMode;
+		return ('onhashchange' in window) &&
+			(doc_mode === undefined || doc_mode > 7);
+	})();
+
+	L.Hash = function(map) {
+		this.onHashChange = L.Util.bind(this.onHashChange, this);
+
+		if (map) {
+			this.init(map);
+		}
+	};
+
+	L.Hash.parseHash = function(hash) {
+		if(hash.indexOf('#') === 0) {
+			hash = hash.substr(1);
+		}
+		var args = hash.split("/");
+		if (args.length == 3) {
+			var zoom = parseInt(args[0], 10),
+			lat = parseFloat(args[1]),
+			lon = parseFloat(args[2]);
+			if (isNaN(zoom) || isNaN(lat) || isNaN(lon)) {
+				return false;
+			} else {
+				return {
+					center: new L.LatLng(lat, lon),
+					zoom: zoom
+				};
+			}
+		} else {
+			return false;
+		}
+	};
+
+	L.Hash.formatHash = function(map) {
+		var center = map.getCenter(),
+		    zoom = map.getZoom(),
+		    precision = Math.max(0, Math.ceil(Math.log(zoom) / Math.LN2));
+
+		return "#" + [zoom,
+			center.lat.toFixed(precision),
+			center.lng.toFixed(precision)
+		].join("/");
+	},
+
+	L.Hash.prototype = {
+		map: null,
+		lastHash: null,
+
+		parseHash: L.Hash.parseHash,
+		formatHash: L.Hash.formatHash,
+
+		init: function(map) {
+			this.map = map;
+
+			// reset the hash
+			this.lastHash = null;
+			this.onHashChange();
+
+			if (!this.isListening) {
+				this.startListening();
+			}
+		},
+
+		removeFrom: function(map) {
+			if (this.changeTimeout) {
+				clearTimeout(this.changeTimeout);
+			}
+
+			if (this.isListening) {
+				this.stopListening();
+			}
+
+			this.map = null;
+		},
+
+		onMapMove: function() {
+			// bail if we're moving the map (updating from a hash),
+			// or if the map is not yet loaded
+
+			if (this.movingMap || !this.map._loaded) {
+				return false;
+			}
+
+			var hash = this.formatHash(this.map);
+			if (this.lastHash != hash) {
+				location.replace(hash);
+				this.lastHash = hash;
+			}
+		},
+
+		movingMap: false,
+		update: function() {
+			var hash = location.hash;
+			if (hash === this.lastHash) {
+				return;
+			}
+			var parsed = this.parseHash(hash);
+			if (parsed) {
+				this.movingMap = true;
+
+				this.map.setView(parsed.center, parsed.zoom);
+
+				this.movingMap = false;
+			} else {
+				this.onMapMove(this.map);
+			}
+		},
+
+		// defer hash change updates every 100ms
+		changeDefer: 100,
+		changeTimeout: null,
+		onHashChange: function() {
+			// throttle calls to update() so that they only happen every
+			// `changeDefer` ms
+			if (!this.changeTimeout) {
+				var that = this;
+				this.changeTimeout = setTimeout(function() {
+					that.update();
+					that.changeTimeout = null;
+				}, this.changeDefer);
+			}
+		},
+
+		isListening: false,
+		hashChangeInterval: null,
+		startListening: function() {
+			this.map.on("moveend", this.onMapMove, this);
+
+			if (HAS_HASHCHANGE) {
+				L.DomEvent.addListener(window, "hashchange", this.onHashChange);
+			} else {
+				clearInterval(this.hashChangeInterval);
+				this.hashChangeInterval = setInterval(this.onHashChange, 50);
+			}
+			this.isListening = true;
+		},
+
+		stopListening: function() {
+			this.map.off("moveend", this.onMapMove, this);
+
+			if (HAS_HASHCHANGE) {
+				L.DomEvent.removeListener(window, "hashchange", this.onHashChange);
+			} else {
+				clearInterval(this.hashChangeInterval);
+			}
+			this.isListening = false;
+		}
+	};
+	L.hash = function(map) {
+		return new L.Hash(map);
+	};
+	L.Map.prototype.addHash = function() {
+		this._hash = L.hash(this);
+	};
+	L.Map.prototype.removeHash = function() {
+		this._hash.removeFrom();
+	};
+})(window);
+
+/*! leaflet-hexbin.js Version: 0.1.3 */
 (function(){
 	"use strict";
 
@@ -27118,22 +28807,32 @@ L.MarkerClusterGroup.include({
 			that._radiusScale.domain(extent);
 
 			// Update the d3 visualization
-			var join = g.selectAll('path.hexbin-hexagon')
+			that.hexagons = g.selectAll('path.hexbin-hexagon')
 				.data(bins, function(d){ return d.i + ':' + d.j; });
 
-			join.transition().duration(200)
+			that.hexagons.transition().duration(200)
 				.attr('fill', function(d){ return that._colorScale(d.length); });
 	
-			join.enter().append('path').attr('class', 'hexbin-hexagon')
+			that.hexagons.enter().append('path').attr('class', 'hexbin-hexagon')
 				.attr('d', function(d){
 					return 'M' + d.x + ',' + d.y + that._hexLayout.hexagon(that._radiusScale(d.length));
 				})
 				.attr('fill', function(d){ return that._colorScale(d.length); })
 				.attr('opacity', 0.01)
 				.transition().duration(200)
-				.attr('opacity', that.options.opacity);
+				.attr('opacity', that.options.opacity)
+
+      if (that.options.hexMouseOver) {
+       that.hexagons.on("mouseover", that.options.hexMouseOver);
+      }
+      if (that.options.hexMouseOut) {
+       that.hexagons.on("mouseout", that.options.hexMouseOut);
+      }
+      if (that.options.hexClick) {
+       that.hexagons.on("click", that.options.hexClick);
+      }
 	
-			join.exit().transition().duration(200)
+			that.hexagons.exit().transition().duration(200)
 				.attr('opacity', 0.01)
 				.remove();
 		},
@@ -27175,7 +28874,6 @@ L.MarkerClusterGroup.include({
 				return { o: d, point: [lng, lat]};
 			});
       var bounds = that._getBounds(data);
-      console.log(bounds);
       return [
         [bounds.min[0], bounds.min[1]],
         [bounds.max[0], bounds.max[1]]
@@ -27228,7 +28926,37 @@ L.MarkerClusterGroup.include({
 			this.options.value = valueFn;
 			this._redraw();
 			return this;
-		}
+		},
+
+		hexClick: function(fn) {
+			if(undefined === fn){
+				return this.options.hexClick;
+			}
+
+			this.options.hexClick = fn;
+			this.hexagons.on("click", fn);
+			return this;
+    },
+
+		hexMouseOver: function(fn) {
+			if(undefined === fn){
+				return this.options.hexMouseOver;
+			}
+
+			this.options.hexMouseOver = fn;
+			this.hexagons.on("mouseover", fn);
+			return this;
+    },
+
+		hexMouseOut: function(fn) {
+			if(undefined === fn){
+				return this.options.hexMouseOut;
+			}
+
+			this.options.hexMouseOut = fn;
+			this.hexagons.on("mouseout", fn);
+			return this;
+    }
 
 	});
 
@@ -27396,3 +29124,85 @@ var d3_hexbinAngles = d3.range(0, 2 * Math.PI, Math.PI / 3),
     define(STMN.hullLayer);
   }
 }());
+
+//
+// Stateful QueryString
+//
+// This module syncs an object and events with the browser location
+// serch (query string) section.
+//
+// !!So far I have not needed this for a
+// single page app so it only reads the query string once on load!!
+//
+// Requires:
+//  * https://github.com/sindresorhus/query-string
+//  * https://github.com/standardpixel/samesies
+//
+
+(function(history) {
+  "use strict";
+
+  function StatefulQueryString() {
+
+    var that = this,
+        cacheQueryString;
+
+    function init() {
+
+      //
+      // Populate data object with starting state
+      // of URL
+      //
+      cacheQueryString = queryString.parse(location.search);
+
+      //
+      // Set each property to the module data object
+      //
+      that.set(cacheQueryString);
+
+      //
+      // Set up data listener
+      //
+      that.on("set", function(e) {
+        history.pushState({}, document.title, "?state=" + e.caller.data.state);
+      });
+
+    }
+
+    //
+    // Go for it!
+    //
+    if (history) {
+
+      init();
+
+    } else { //History API is not supported
+      return null;
+    }
+
+  }
+
+  //
+  // Make available to STMN namespace
+  //
+  if (typeof window.STMN !== "object") {
+    window.STMN = {};
+  }
+
+  //
+  // Set the constructor to the STMN namespace
+  //
+  window.STMN.StatefulQueryString = STPX.samesies.extend(StatefulQueryString);
+
+  //
+  // Make available to CommonJS
+  //
+  if (typeof module === "object" && typeof module.exports === "object") {
+    module.exports = STMN.StatefulQueryString;
+
+  // Make available to AMD module
+  } else if (typeof define === "function" && define.amd) {
+    define(["samesies", "query-string"], STMN.StatefulQueryString);
+  }
+
+}(window.history));

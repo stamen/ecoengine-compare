@@ -549,17 +549,19 @@
   top: 10px;
   right: 10px;
   border: solid 1px #aaa;
-  width: 250px;
+  width: 270px;
   padding: 10px;
-  background-color: #fff; }
+  background-color: #fff;
+  box-sizing: border-box; }
   .legend-layer-menu h2 {
-    position: relative; }
+    position: relative;
+    font-size: 125%;
+    font-weight: normal; }
   .legend-layer-menu select {
     width: 100%; }
   .legend-layer-menu .content-container {
     position: relative; }
     .legend-layer-menu .content-container button {
-      border-radius: 0;
       border: solid 1px #aaa;
       background-color: white;
       padding: 3px 5px;
@@ -570,7 +572,6 @@
       cursor: pointer; }
   .legend-layer-menu .dropzone {
     border: dashed 1px transparent;
-    border-radius: 4px;
     padding: 10px;
     transition: background-color 0.3s, border-color 0.3s;
     min-height: 25px;
@@ -583,6 +584,8 @@
     display: inline-block;
     min-width: 40px;
     padding: 3px;
+    padding-left: 25px;
+    box-sizing: border-box;
     border: solid 1px #eee;
     background-color: #fff;
     -webkit-transform: translate(0px, 0px);
@@ -603,5 +606,140 @@
     .legend-layer-menu .drag-drop .label {
       margin-left: 5px;
       font-size: 75%; }
+    .legend-layer-menu .drag-drop .delete-icon {
+      width: 7px;
+      position: absolute;
+      right: 10px;
+      top: 11px;
+      cursor: pointer; }
+    .legend-layer-menu .drag-drop .drag-icon {
+      fill: #aaa;
+      width: 21px;
+      height: 13px;
+      position: absolute;
+      left: 6px;
+      top: 8px; }
+    .legend-layer-menu .drag-drop .color-picker {
+      padding: 0;
+      border: 0;
+      background-color: white;
+      width: 20px;
+      height: 20px;
+      margin-left: 5px; }
+  .legend-layer-menu .color-picker-panel {
+    background-color: #fff;
+    display: none;
+    position: absolute;
+    top: 106px;
+    left: 23px;
+    width: 220px;
+    padding: 5px;
+    border: solid 1px #aaa;
+    box-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5); }
+    .legend-layer-menu .color-picker-panel .color {
+      width: 20px;
+      height: 20px;
+      float: left;
+      cursor: pointer; }
 
 /*# sourceMappingURL=legend-layer-menu.css.map */
+
+/* Restrict width of color picker */
+.eight-bit-color-picker {
+  max-width: 34px;
+}
+
+/* Selected color box styling */
+.eight-bit-color-picker .ebcp-selection, .ebcp-color-preview {
+  width: 32px;
+  height: 32px;
+  border: 1px solid black;
+  margin-bottom: 5px;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.4);
+}
+
+/* Color selection box styling */
+.ebcp-selector {
+
+  /* Prevent highlight on drag */
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+
+  /* Positioning and styling */
+  position: absolute;
+  box-shadow: 3px 3px 4px rgba(0, 0, 0, 0.4);
+  padding: 20px;
+  width: 300px;
+  height: 164px;
+  background-color: #444;
+  overflow: hidden;
+
+  /* Fade in/out rules */
+  opacity: 0;
+  visibility: hidden;
+  -webkit-transition: all 0.2s ease-in-out 0s;
+  -moz-transition: all 0.2s ease-in-out 0s;
+  -ms-transition: all 0.2s ease-in-out 0s;
+  transition: all 0.2s ease-in-out 0s;
+}
+
+/* Class that is added to visible selectionUIs */
+.ebcp-shown-selector {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Have color palette and preview values display inline */
+.ebcp-selector .ebcp-palette, .ebcp-selector .ebcp-preview-values{
+  display: inline-block;
+}
+
+/* Define size of palette */
+.ebcp-palette {
+  max-width: 164px;
+}
+
+/* Fix positioning of preview values */
+.ebcp-selector .ebcp-preview-values {
+  position: relative;
+  bottom: 50px;
+  margin-left: 20px;
+}
+
+/* Use inline-block for color picker grid */
+.ebcp-palette-row {
+  display: inline-block;
+}
+
+/* Squares in color picker */
+.ebcp-palette-row > div {
+  width: 10px;
+  height: 10px;
+  cursor: crosshair;
+}
+
+/* Fix alignment of color preview box */
+.ebcp-color-preview {
+  position: relative;
+  top: -20px;
+}
+
+/* Make text inputs and color preview display inline */
+.ebcp-text-container, .ebcp-color-preview {
+  display: inline-block;
+}
+
+/* Set width of text inputs so they are consistent */
+.ebcp-text-container {
+  width: 80px;
+}
+
+/* Styles for color value text */
+.ebcp-text {
+  display: block;
+  font-family: Menlo, monospace;
+  font-weight: 300;
+  font-size: 16px;
+  width: 70px;
+}

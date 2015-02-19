@@ -18,41 +18,40 @@ body {
     background-color: red; }
 
 body {
-  font-family: 'Ubuntu', sans-serif;
+  font-family: 'Roboto', sans-serif;
   line-height: 1.5em;
   font-size: 14px; }
+  body .interface-title {
+    background-color: #67abec;
+    padding: 10px;
+    color: white;
+    display: none; }
+    @media (max-width: 720px) {
+      body .interface-title {
+        display: block; } }
 
 #map {
   background-color: transparent; }
-
-#map-instruction {
-  position: absolute;
-  top: 20%;
-  left: 40%;
-  width: 200px;
-  text-align: center;
-  color: #fff;
-  font-size: 125%;
-  display: block; }
-  @media (max-width: 720px) {
-    #map-instruction {
-      display: none; } }
 
 #legend-layer-menu-min {
   display: block;
   background-color: #fff;
   border: solid 1px #aaa;
-  width: 21px;
-  height: 15px;
+  height: 16px;
+  width: 19px;
   position: absolute;
   top: 10px;
   right: 10px;
   padding: 10px;
   cursor: pointer;
   display: none; }
+  @media (max-width: 720px) {
+    #legend-layer-menu-min {
+      top: 51px; } }
   #legend-layer-menu-min:hover {
     background-color: #67abec; }
   #legend-layer-menu-min svg {
+    height: 26px;
     width: 28px;
     margin: -1px 0 0 -5px; }
   @media (max-width: 720px) {
@@ -67,8 +66,12 @@ body {
 
 #legend-layer-menu {
   background-color: rgba(255, 255, 255, 0.9);
-  max-height: 95vh;
   display: block; }
+  #legend-layer-menu .interface-title {
+    margin-top: -9px;
+    margin-left: -9px;
+    margin-right: -9px;
+    display: block; }
   #legend-layer-menu .close-button {
     display: none; }
   @media (max-width: 720px) {
@@ -86,7 +89,7 @@ body {
         display: block;
         width: 25px;
         position: absolute;
-        top: 10px;
+        top: 52px;
         right: 29px;
         cursor: pointer; }
         #legend-layer-menu .close-button circle, #legend-layer-menu .close-button line {
