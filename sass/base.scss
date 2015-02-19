@@ -140,6 +140,15 @@ body {
     }
   }
 
+  .draggable {
+
+    &.progress {
+      .delete-icon {
+        display:none;
+      }
+    }
+  }
+
   .loading {
     position:absolute;
     top:8px;
@@ -152,7 +161,7 @@ body {
     transform:scale(0.6);
 
     position:absolute;
-    right:10px;
+    right:5px;
 
     .f_circleG{
     position:absolute;
