@@ -90,6 +90,8 @@ function IndexController() {
       "scrollWheelZoom" : false
     }).setView([37.5333, -77.4667], 2);
 
+    (new L.Hash(that.map));
+
     //
     // Add base-layer
     //
