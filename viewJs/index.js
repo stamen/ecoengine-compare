@@ -48,16 +48,29 @@ function IndexController() {
               }).addTo(that.map);
 
           hex.hexMouseOver(function(d) {
-            console.log(d);
+            // console.log(d);
           });
           hex.hexMouseOut(function(d) {
             // hide data table
           });
-          hex.hexClick(function(d) {
+          hex.hexClick(function(hexdata) {
+            var data = hexdata.map(function(p) {
+              var ret = p.d.properties;
+              ret.long = p.d.geometry.coordinates[0];
+              ret.lat = p.d.geometry.coordinates[1];
+              return ret;
+            });
+
+            var w = window.open('', 'wnd');
+            w.document.body.innerHTML = "<pre>" + d3.csv.format(data) + "</pre>";
             // export data
           });
 
-          hex.data(pages.filter(function(p){return (typeof p.geometry === "object" && p.geometry !== null)}).map(function(p) {return p.geometry.coordinates;}));
+          hex.data(pages.filter(function(p){return (typeof p.geometry === "object" && p.geometry !== null)}).map(function(p) {
+            p[0] = p.geometry.coordinates[0];
+            p[1] = p.geometry.coordinates[1];
+            return p;
+          }));
 
           hex.options.__sHexLayer = true;
 
