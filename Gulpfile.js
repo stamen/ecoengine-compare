@@ -89,7 +89,8 @@ gulp.task("lint", function() {
         "L",
         "STMN",
         "STPX",
-        "interact"
+        "interact",
+        "queryString"
       ],
       expr: true
     }))
@@ -121,7 +122,10 @@ gulp.task("uglifyViewJs", function() {
   .src([paths.viewJs])
   .pipe(sourcemaps.init())
   .pipe(wrap("(function(STMN){<%= contents %>}(window.STMN));"))
-  .pipe(gulp.dest(paths.publicJs))
+  .pipe(gulp.dest(paths.publicJs)).on("error", function(e) {
+    console.log("Uglify view error:\x07",e.message, " on line: ", e.lineNumber);
+    return this.end();
+  })
   .pipe(uglify({
     mangle: true,
     output: {

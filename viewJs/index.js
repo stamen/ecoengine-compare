@@ -196,23 +196,67 @@ function IndexController() {
   }
 
   function initLayerMenu() {
-    var layerMinNode    = document.querySelector("#legend-layer-menu-min"),
-        layerPanelClose = document.querySelector("#legend-layer-menu .close-button");
+    var layerMinNode         = document.querySelector("#legend-layer-menu-min"),
+        layerPanelClose      = document.querySelector("#legend-layer-menu .close-button"),
+        uriSegmentRegEx      = /"uri":"([^"]+)"/,
+        menuStateStringParts = [],
+        startingMenuState;
 
-    layerMenu = new STMN.LegendLayerMenu("#legend-layer-menu");
+    //
+    // The menu state taken from the URL might be corrupted. Lets try to make it
+    // an object and set it as null if it fails
+    //
+
+    try {
+      startingMenuState = JSON.parse(decodeURIComponent(LZString.decompressFromUTF16(that.statefulQueryString.get("state"))));
+    } catch (err) {
+      startingMenuState = null;
+    }
+
+    layerMenu = new STMN.LegendLayerMenu("#legend-layer-menu", {
+      "menuState" : startingMenuState
+    });
     that.layerMenu = layerMenu;
+
+    //
+    // Add layers to the map if there are any
+    //
+    startingMenuState = layerMenu.getMenuState(); //This has more data attached to it after being passed through the constructor
+
+    if (startingMenuState) {
+      startingMenuState.forEach(function(layer) {
+        showMenuItemLoadState(layer);
+        that.showLayer(layer, function() {
+          hideMenuItemLoadState(layer);
+        }); //Passing a layer object
+      });
+    }
 
     //
     // when a layer is added, put it on the map
     //
     layerMenu.on("layerAdded", function (e) {
 
-      var layer = e.caller;
+      var layer     = e.caller,
+          menuState = layerMenu.getMenuState();
 
       showMenuItemLoadState(layer);
       that.showLayer(layer, function() {
         hideMenuItemLoadState(layer);
       }); //Passing a layer object
+
+      menuState = menuState.map(function(layer) {
+
+        delete layer.id;
+        delete layer.element;
+
+        layer.uri = layer.uri.replace(/%22/g,"'");
+
+        return layer;
+
+      });
+
+      that.statefulQueryString.set("state", encodeURIComponent(LZString.compressToUTF16(JSON.stringify(menuState))));
 
     });
 
@@ -242,6 +286,12 @@ function IndexController() {
 
   }
 
+  function initStatefulQuerystring() {
+
+    that.statefulQueryString = new STMN.StatefulQueryString();
+
+  }
+
   function buildLayer(layerObject, pages) {
 
     if (typeof layers[layerObject.id] === "object" && layerObject.list !== "raster") {
@@ -268,7 +318,7 @@ function IndexController() {
 
     } else {
 
-      return (new STMN.EcoengineClient).requestRecursive(layerObject.uri,
+      return (new STMN.EcoengineClient).requestRecursive(layerObject.uri.replace(/'/g,'"'),
       function(pages) { //Done
 
         layerDataCache[layerObject.id] = pages;
@@ -312,6 +362,7 @@ function IndexController() {
   //
   // Init
   //
+  initStatefulQuerystring();
   initLayerMenu();
   initMap();
 
