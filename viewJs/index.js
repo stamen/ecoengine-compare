@@ -41,11 +41,22 @@ function IndexController() {
         },
         "hexlayer": function (pages, layer) {
           var hex = new L.HexbinLayer({
-                  radiusRange : [1,10],
+                  radiusRange : [1,document.querySelector("#hexagon-radius").value],
                   radius: document.querySelector("#hexagon-radius").value,
                   opacity: 1,
                   colorRange: [layer.color, layer.color]
               }).addTo(that.map);
+
+          hex.hexMouseOver(function(d) {
+            console.log(d);
+          });
+          hex.hexMouseOut(function(d) {
+            // hide data table
+          });
+          hex.hexClick(function(d) {
+            // export data
+          });
+
           hex.data(pages.filter(function(p){return (typeof p.geometry === "object" && p.geometry !== null)}).map(function(p) {return p.geometry.coordinates;}));
 
           hex.options.__sHexLayer = true;
@@ -146,9 +157,12 @@ function IndexController() {
       that.map.eachLayer(function(layer) {
 
         if (layer.options.__sHexLayer === true) {
-          layer.radiusScale().range([e.target.value, e.target.value]);
-          layer._redraw();
-        }
+          layer.options.radius = +e.target.value;
+          layer.options.radiusRange = [1, +e.target.value];
+          var data = layer._data;
+          layer.initialize(layer.options);
+          layer.data(data);
+      }
 
       });
     });
