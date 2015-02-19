@@ -26,6 +26,7 @@
     "leaflet-hexbin-2": "git@github.com:syntagmatic/leaflet-hexbin.git",
     "eight-bit-color-picker": "~1.1.0",
     "query-string": "~1.0.0",
-    "lz-string-bower": "~1.3.3"
+    "lz-string-bower": "~1.3.3",
+    "leaflet-hash": "*"
   }
 }
