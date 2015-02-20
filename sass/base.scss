@@ -1,4 +1,4 @@
-body {
+.ecoengine-compare {
   margin:0;
   padding:0;
   background-color:#cdd2d4;
@@ -106,6 +106,17 @@ body {
     display:none;
   }
 
+  .share-button {
+    fill: white;
+    width: 24px;
+    height: 24px;
+    z-index: 100;
+    position: absolute;
+    top: 9px;
+    right: 10px;
+    cursor:pointer;
+  }
+
   display:block;
   @media (max-width: 720px) {
     display:none;
@@ -138,6 +149,7 @@ body {
         }
       }
     }
+
   }
 
   .draggable {

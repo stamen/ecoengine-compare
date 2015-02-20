@@ -88,7 +88,7 @@ function IndexController() {
         }
       },
       rasterLayers = [],
-      layerMenu;
+      layerMenu, shareButtonElement;
 
   //
   // Convenience methods for browsers
@@ -227,7 +227,7 @@ function IndexController() {
     //
 
     try {
-      startingMenuState = JSON.parse(decodeURIComponent(LZString.decompressFromUTF16(that.statefulQueryString.get("state"))));
+      startingMenuState = JSON.parse(decodeURIComponent(LZString.decompressFromBase64(that.statefulQueryString.get("state"))));
     } catch (err) {
       startingMenuState = null;
     }
@@ -275,7 +275,7 @@ function IndexController() {
 
       });
 
-      that.statefulQueryString.set("state", encodeURIComponent(LZString.compressToUTF16(JSON.stringify(menuState))));
+      that.statefulQueryString.set("state", encodeURIComponent(LZString.compressToBase64(JSON.stringify(menuState))));
 
     });
 
@@ -308,6 +308,36 @@ function IndexController() {
   function initStatefulQuerystring() {
 
     that.statefulQueryString = new STMN.StatefulQueryString();
+
+  }
+
+  function initShareButton() {
+
+    that.zeroClipboard = new ZeroClipboard();
+
+    shareButtonElement = layerMenu.rootNode.querySelector(".ecoengine-compare .share-button");
+
+    if (shareButtonElement) {
+
+      shareButtonElement.addEventListener("click", function() {
+
+        var xmlhttp = new XMLHttpRequest();
+
+        xmlhttp.open("POST","https://www.googleapis.com/urlshortener/v1/url",true);
+        xmlhttp.setRequestHeader("Content-type","application/json");
+
+        xmlhttp.onreadystatechange = function() {
+
+          if (xmlhttp.readyState==4 && xmlhttp.status==200) {
+            that.zeroClipboard.setData("text/plain", (JSON.parse(xmlhttp.responseText)).id);
+          }
+        };
+
+        xmlhttp.send("{\"longUrl\": \"" + location.href + "\"}");
+
+      }, false);
+
+    }
 
   }
 
@@ -384,6 +414,7 @@ function IndexController() {
   initStatefulQuerystring();
   initLayerMenu();
   initMap();
+  initShareButton();
 
   return that;
 
