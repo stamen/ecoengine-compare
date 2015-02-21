@@ -313,8 +313,6 @@ function IndexController() {
 
   function initShareButton() {
 
-    that.zeroClipboard = new ZeroClipboard();
-
     shareButtonElement = layerMenu.rootNode.querySelector(".ecoengine-compare .share-button");
 
     if (shareButtonElement) {
@@ -329,7 +327,30 @@ function IndexController() {
         xmlhttp.onreadystatechange = function() {
 
           if (xmlhttp.readyState==4 && xmlhttp.status==200) {
-            that.zeroClipboard.setData("text/plain", (JSON.parse(xmlhttp.responseText)).id);
+
+            swal({
+              "title"              : "Here is your share link",
+              "text"               : (JSON.parse(xmlhttp.responseText)).id,
+              "confirmButtonText"  : "All done",
+              "confirmButtonColor" : "rgb(103,171,236)",
+              "closeOnConfirm"     : true,
+              "customClass"        : "modal-share"
+            });
+
+            setTimeout(function() {
+
+              var sweetAlert = document.querySelector(".sweet-alert");
+
+              if (sweetAlert) {
+                sweetAlert.removeAttribute("tabIndex");
+              }
+
+            }, 100);
+
+          } else {
+
+            swal("Uh oh", "We were not able to create a short URL. Please check your connection and try again in a few minutes.", "error");
+
           }
         };
 
