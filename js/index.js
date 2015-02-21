@@ -48,16 +48,29 @@ function IndexController() {
               }).addTo(that.map);
 
           hex.hexMouseOver(function(d) {
-            console.log(d);
+            // console.log(d);
           });
           hex.hexMouseOut(function(d) {
             // hide data table
           });
-          hex.hexClick(function(d) {
+          hex.hexClick(function(hexdata) {
+            var data = hexdata.map(function(p) {
+              var ret = p.d.properties;
+              ret.long = p.d.geometry.coordinates[0];
+              ret.lat = p.d.geometry.coordinates[1];
+              return ret;
+            });
+
+            var w = window.open('', 'wnd');
+            w.document.body.innerHTML = "<pre>" + d3.csv.format(data) + "</pre>";
             // export data
           });
 
-          hex.data(pages.filter(function(p){return (typeof p.geometry === "object" && p.geometry !== null)}).map(function(p) {return p.geometry.coordinates;}));
+          hex.data(pages.filter(function(p){return (typeof p.geometry === "object" && p.geometry !== null)}).map(function(p) {
+            p[0] = p.geometry.coordinates[0];
+            p[1] = p.geometry.coordinates[1];
+            return p;
+          }));
 
           hex.options.__sHexLayer = true;
 
@@ -75,7 +88,7 @@ function IndexController() {
         }
       },
       rasterLayers = [],
-      layerMenu;
+      layerMenu, shareButtonElement;
 
   //
   // Convenience methods for browsers
@@ -175,12 +188,16 @@ function IndexController() {
 
     var layerNode = layerMenu.getLayerNode(layer);
 
+    layerNode.classList.add("progress");
+
     that.utils.append(layerNode, "<div id=\"floatingCirclesG\" class=\"loading\"><div class=\"f_circleG\" id=\"frotateG_01\"></div><div class=\"f_circleG\" id=\"frotateG_02\"></div><div class=\"f_circleG\" id=\"frotateG_03\"></div><div class=\"f_circleG\" id=\"frotateG_04\"></div><div class=\"f_circleG\" id=\"frotateG_05\"></div><div class=\"f_circleG\" id=\"frotateG_06\"></div><div class=\"f_circleG\" id=\"frotateG_07\"></div><div class=\"f_circleG\" id=\"frotateG_08\"></div></div>");
   }
 
   function hideMenuItemLoadState(layer) {
     var layerNode   = layerMenu.getLayerNode(layer),
         loadingNode = layerNode.querySelector(".loading");
+
+    layerNode.classList.remove("progress");
 
     if (loadingNode) {
       loadingNode.parentNode.removeChild(loadingNode);
@@ -210,7 +227,7 @@ function IndexController() {
     //
 
     try {
-      startingMenuState = JSON.parse(decodeURIComponent(LZString.decompressFromUTF16(that.statefulQueryString.get("state"))));
+      startingMenuState = JSON.parse(decodeURIComponent(LZString.decompressFromBase64(that.statefulQueryString.get("state"))));
     } catch (err) {
       startingMenuState = null;
     }
@@ -258,7 +275,7 @@ function IndexController() {
 
       });
 
-      that.statefulQueryString.set("state", encodeURIComponent(LZString.compressToUTF16(JSON.stringify(menuState))));
+      that.statefulQueryString.set("state", encodeURIComponent(LZString.compressToBase64(JSON.stringify(menuState))));
 
     });
 
@@ -291,6 +308,57 @@ function IndexController() {
   function initStatefulQuerystring() {
 
     that.statefulQueryString = new STMN.StatefulQueryString();
+
+  }
+
+  function initShareButton() {
+
+    shareButtonElement = layerMenu.rootNode.querySelector(".ecoengine-compare .share-button");
+
+    if (shareButtonElement) {
+
+      shareButtonElement.addEventListener("click", function() {
+
+        var xmlhttp = new XMLHttpRequest();
+
+        xmlhttp.open("POST","https://www.googleapis.com/urlshortener/v1/url",true);
+        xmlhttp.setRequestHeader("Content-type","application/json");
+
+        xmlhttp.onreadystatechange = function() {
+
+          if (xmlhttp.readyState==4 && xmlhttp.status==200) {
+
+            swal({
+              "title"              : "Here is your share link",
+              "text"               : (JSON.parse(xmlhttp.responseText)).id,
+              "confirmButtonText"  : "All done",
+              "confirmButtonColor" : "rgb(103,171,236)",
+              "closeOnConfirm"     : true,
+              "customClass"        : "modal-share"
+            });
+
+            setTimeout(function() {
+
+              var sweetAlert = document.querySelector(".sweet-alert");
+
+              if (sweetAlert) {
+                sweetAlert.removeAttribute("tabIndex");
+              }
+
+            }, 100);
+
+          } else {
+
+            swal("Uh oh", "We were not able to create a short URL. Please check your connection and try again in a few minutes.", "error");
+
+          }
+        };
+
+        xmlhttp.send("{\"longUrl\": \"" + location.href + "\"}");
+
+      }, false);
+
+    }
 
   }
 
@@ -367,6 +435,7 @@ function IndexController() {
   initStatefulQuerystring();
   initLayerMenu();
   initMap();
+  initShareButton();
 
   return that;
 

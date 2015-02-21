@@ -1,21 +1,23 @@
-body {
+.ecoengine-compare {
   margin: 0;
   padding: 0;
   background-color: #cdd2d4; }
-  body #map {
+  .ecoengine-compare #map {
     width: 100vw;
     height: 100vh; }
-  body .point-feature-icon {
+  .ecoengine-compare .point-feature-icon {
     width: 16px !important;
     height: 16px !important;
     margin: -8px 0 0 -8px !important;
     border-radius: 999px;
     background-color: blue;
     opacity: .3 !important; }
-  body .point-feature-icon-blue {
+  .ecoengine-compare .point-feature-icon-blue {
     background-color: blue; }
-  body .point-feature-icon-red {
+  .ecoengine-compare .point-feature-icon-red {
     background-color: red; }
+  .ecoengine-compare .hexbin-hexagon {
+    cursor: pointer; }
 
 body {
   font-family: 'Roboto', sans-serif;
@@ -74,6 +76,15 @@ body {
     display: block; }
   #legend-layer-menu .close-button {
     display: none; }
+  #legend-layer-menu .share-button {
+    fill: white;
+    width: 18px;
+    height: 18px;
+    z-index: 100;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    cursor: pointer; }
   @media (max-width: 720px) {
     #legend-layer-menu {
       display: none; }
@@ -96,6 +107,8 @@ body {
           stroke: #000; }
         #legend-layer-menu .close-button:hover circle, #legend-layer-menu .close-button:hover line {
           stroke: #67abec; } }
+  #legend-layer-menu .draggable.progress .delete-icon {
+    display: none; }
   #legend-layer-menu .loading {
     position: absolute;
     top: 8px;
@@ -107,7 +120,7 @@ body {
     -o-transform: scale(0.6);
     transform: scale(0.6);
     position: absolute;
-    right: 10px; }
+    right: 5px; }
     #legend-layer-menu .loading .f_circleG {
       position: absolute;
       background-color: #eee;
@@ -238,9 +251,23 @@ body {
     border-bottom-right-radius: 0px; }
     .leaflet-bar a:hover, .leaflet-bar a:first-child:hover, .leaflet-bar a:last-child:hover {
       background-color: #67abec; }
+  .leaflet-bar .hidden {
+    display: none; }
 
-.hidden {
-  display: none; }
+/* Sweet Alert overides */
+.sweet-alert {
+  border-radius: 0;
+  font-family: 'Roboto', sans-serif;
+  font-size: 100%; }
+  .sweet-alert h2 {
+    font-weight: normal;
+    margin: 0;
+    font-size: 125%; }
+  .sweet-alert button {
+    border-radius: 0;
+    font-size: 100%; }
+    .sweet-alert button:hover {
+      background-color: #67abec !important; }
 
 .input-form {
   position: absolute;
