@@ -5,7 +5,8 @@ function IndexController() {
   var that           = this,
       layers         = {},
       layerDataCache = {},
-      dropZoneLayers = {
+      rasterCache    = {},
+      layerFactories = {
         "pointlayer": function (pages, layer) {
           var hex = new L.HexbinLayer({
                   radiusRange : [1,1],
@@ -17,7 +18,6 @@ function IndexController() {
           return hex;
         },
         "hulllayer": function (features, layer) {
-
           var group = new L.MarkerClusterGroup({
             "polygonOptions" : {
               "color"  : layer.color,
@@ -100,8 +100,12 @@ function IndexController() {
     // create a map in the "map" div, set the view to a given place and zoom
     that.map = L.map("map", {
       "minZoom" : 2,
+      "maxZoom" : 17,
       "scrollWheelZoom" : false
     }).setView([37.5333, -77.4667], 2);
+
+    window.STMN.map = that.map;
+    window.STMN.layers = layers;
 
     (new L.Hash(that.map));
 
@@ -113,9 +117,12 @@ function IndexController() {
     }))
     rasterLayers[rasterLayers.length-1].addTo(that.map);
 
+    rasterCache["baselayer"] = "http://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png";
+    layers["baselayer"] = rasterLayers[rasterLayers.length-1];
+
     that.layerMenu.on("orderChanged", function(e) {
 
-      clearLayers();
+      updateDisplayOrder(e.caller.order);
 
       e.caller.order.forEach(function(layerItem) {
         showLayer(layerItem);
@@ -184,6 +191,20 @@ function IndexController() {
 
   }
 
+  function updateDisplayOrder(order) {
+
+    order.forEach(function(layer) {
+
+      if (layers[layer.id].bringToBack) {
+        console.log(layer.id + " is positionable");
+        layers[layer.id].bringToBack();
+      } else {
+        console.log(layer.id + " is not positionable", layers[layer.id]);
+      }
+
+    });
+  }
+
   function showMenuItemLoadState(layer) {
 
     var layerNode = layerMenu.getLayerNode(layer);
@@ -207,10 +228,16 @@ function IndexController() {
   function clearLayers() {
 
     that.map.eachLayer(function(layer) {
-      that.map.removeLayer(layer);
+
+      //
+      // Clear everything but rasters
+      //
+      if (typeof layer.getTileUrl !== "function") {
+        that.map.removeLayer(layer);
+      }
+
     });
 
-    rasterLayers = [];
     layers = {};
   }
 
@@ -364,14 +391,28 @@ function IndexController() {
 
   function buildLayer(layerObject, pages) {
 
-    if (typeof layers[layerObject.id] === "object" && layerObject.list !== "raster") {
-       that.map.removeLayer(layers[layerObject.id]);
-       delete layers[layerObject.id];
-     }
+    //
+    // Don't proceed if this is a cached raster
+    //
+    if (!layerObject.list === "raster" || (!rasterCache[layerObject.id] || rasterCache[layerObject.id] !== layerObject.uri)) {
 
-    layers[layerObject.id] = dropZoneLayers[layerObject.list](pages, layerObject);
+      //
+      // Cache this raster layer
+      //
+      if (layerObject.list === "raster") {
+        rasterCache[layerObject.id] = layerObject.uri;
+      }
 
-    that.map.addLayer(layers[layerObject.id]);
+      if (typeof layers[layerObject.id] === "object" && layerObject.list !== "raster") {
+         that.map.removeLayer(layers[layerObject.id]);
+         delete layers[layerObject.id];
+       }
+
+      layers[layerObject.id] = layerFactories[layerObject.list](pages, layerObject);
+
+      that.map.addLayer(layers[layerObject.id]);
+
+    }
   }
 
   function showLayer(layerObject, callback) {
@@ -382,6 +423,7 @@ function IndexController() {
     // we can use it. One could force an update by deleting the
     // cache entry for a layer
     //
+
     if (layerDataCache[layerObject.id] || layerObject.list === "raster") {
 
       buildLayer(layerObject, layerDataCache[layerObject.id]);
