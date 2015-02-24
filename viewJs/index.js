@@ -22,6 +22,7 @@ function IndexController() {
         },
         "hulllayer": function (features, layer) {
           var group = new L.MarkerClusterGroup({
+            "maxClusterRadius" : 80,
             "polygonOptions" : {
               "color"  : layer.color,
               "stroke" : false,
@@ -280,17 +281,12 @@ function IndexController() {
       });
     }
 
-    //
-    // when a layer is added, put it on the map
-    //
-    layerMenu.on("layerAdded", function (e) {
+    function buildLayer(layerObject) {
+      var menuState = layerMenu.getMenuState();
 
-      var layer     = e.caller,
-          menuState = layerMenu.getMenuState();
-
-      showMenuItemLoadState(layer);
-      that.showLayer(layer, function() {
-        hideMenuItemLoadState(layer);
+      showMenuItemLoadState(layerObject);
+      that.showLayer(layerObject, function() {
+        hideMenuItemLoadState(layerObject);
       }); //Passing a layer object
 
       menuState = menuState.map(function(layer) {
@@ -305,6 +301,27 @@ function IndexController() {
       });
 
       that.statefulQueryString.set("state", encodeURIComponent(LZString.compressToBase64(JSON.stringify(menuState))));
+    }
+
+    layerMenu.on("layerUpdated", function (e) {
+
+      //
+      // If the URI has changed, update the layer
+      //
+      if (e.caller.updatedProperties.indexOf("uri") > -1) {
+        hideLayer(e.caller.layerObject.id, e.caller.layerObject.list);
+        delete layerDataCache[e.caller.layerObject.id];
+        buildLayer(e.caller.layerObject);
+      }
+
+    });
+
+    //
+    // when a layer is added, put it on the map
+    //
+    layerMenu.on("layerAdded", function (e) {
+
+      buildLayer(e.caller);
 
     });
 

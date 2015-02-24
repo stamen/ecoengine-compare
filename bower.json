@@ -5,7 +5,7 @@
   "authors": [
     "Eric Gelinas <evg@stamen.com>"
   ],
-  "description": "A boilerplate to test patterns for Berkeley",
+  "description": "A comparison tool for GeoJSON API endpoints",
   "license": "BSD",
   "private": true,
   "ignore": [
@@ -20,7 +20,7 @@
     "interact": "~1.2.2",
     "samesies": "*",
     "leaflet-convex-hull-cluster": "git@github.com:standardpixel/Leaflet.markercluster.git#master",
-    "leaflet-client": "git@github.com:stamen/ecoengine-client.git#master",
+    "ecoengine-client": "git@github.com:stamen/ecoengine-client.git#master",
     "legend-layer-menu": "git@github.com:stamen/legend-layer-menu.git#master",
     "browsersugar": "*",
     "leaflet-hexbin-2": "git@github.com:syntagmatic/leaflet-hexbin.git",
