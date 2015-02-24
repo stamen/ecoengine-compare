@@ -378,7 +378,7 @@ function IndexController() {
 
           } else {
 
-            swal("Uh oh", "We were not able to create a short URL. Please check your connection and try again in a few minutes.", "error");
+            swal("Here's the thing", "We were not able to create a short URL. Please check your connection and try again in a few minutes.", "error");
 
           }
         };

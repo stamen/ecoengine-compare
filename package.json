@@ -13,7 +13,7 @@
     "url": "git://github.com/stamen/ecoengine-compare.git"
   },
   "author": "evg@stamen.com",
-  "license": "ISC",
+  "license": "BSD",
   "bugs": {
     "url": "https://github.com/stamen/ecoengine-compare/issues"
   },

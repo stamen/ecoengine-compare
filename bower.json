@@ -6,7 +6,7 @@
     "Eric Gelinas <evg@stamen.com>"
   ],
   "description": "A boilerplate to test patterns for Berkeley",
-  "license": "MIT",
+  "license": "BSD",
   "private": true,
   "ignore": [
     "**/.*",
