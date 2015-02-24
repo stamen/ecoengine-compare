@@ -15,7 +15,10 @@ function IndexController() {
                   colorRange: [layer.color, layer.color]
               }).addTo(that.map);
           hex.data(pages.filter(function(p){return (typeof p.geometry === "object" && p.geometry !== null)}).map(function(p) {return p.geometry.coordinates;}));
-          return hex;
+
+          var hexGroup = L.featureGroup([hex]).addTo(that.map);
+
+          return hexGroup;
         },
         "hulllayer": function (features, layer) {
           var group = new L.MarkerClusterGroup({
@@ -72,9 +75,11 @@ function IndexController() {
             return p;
           }));
 
-          hex.options.__sHexLayer = true;
+          var hexGroup = L.featureGroup([hex]).addTo(that.map);
 
-          return hex;
+          hexGroup.__sHexLayer = true;
+
+          return hexGroup;
         },
         "raster" : function (pages, layer) {
           rasterLayers.push(L.tileLayer(layer.uri, {
@@ -135,8 +140,8 @@ function IndexController() {
       // Color change handler for point and hexagon layers
       //
       if (e.caller.list === "pointlayer" || e.caller.list === "hexlayer") {
-        layers[e.caller.id].colorScale().range([e.caller.color, e.caller.color]);
-        layers[e.caller.id]._redraw();
+        layers[e.caller.id].getLayers()[0].colorScale().range([e.caller.color, e.caller.color]);
+        layers[e.caller.id].getLayers()[0]._redraw();
       }
 
       //
@@ -178,12 +183,12 @@ function IndexController() {
     document.querySelector("#hexagon-radius").addEventListener("change", function(e) {
       that.map.eachLayer(function(layer) {
 
-        if (layer.options.__sHexLayer === true) {
-          layer.options.radius = +e.target.value;
-          layer.options.radiusRange = [1, +e.target.value];
+        if (layer.__sHexLayer === true) {
+          layer.getLayers()[0].options.radius = +e.target.value;
+          layer.getLayers()[0].options.radiusRange = [1, +e.target.value];
           var data = layer._data;
-          layer.initialize(layer.options);
-          layer.data(data);
+          layer.getLayers()[0].initialize(layer.options);
+          layer.getLayers()[0].data(data);
       }
 
       });
@@ -195,11 +200,8 @@ function IndexController() {
 
     order.forEach(function(layer) {
 
-      if (layers[layer.id].bringToBack) {
-        console.log(layer.id + " is positionable");
+      if (layers[layer.id] && layers[layer.id].bringToBack) {
         layers[layer.id].bringToBack();
-      } else {
-        console.log(layer.id + " is not positionable", layers[layer.id]);
       }
 
     });
