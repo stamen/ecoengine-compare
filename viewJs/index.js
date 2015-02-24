@@ -133,6 +133,18 @@ function IndexController() {
       e.caller.order.forEach(function(layerItem) {
         showLayer(layerItem);
       });
+
+      updateURLState();
+    });
+
+    that.layerMenu.on("layerRemoved", function(e) {
+
+      that.map.removeLayer(layers[e.caller]);
+      delete layers[e.caller];
+      delete layerDataCache[e.caller];
+
+      updateURLState();
+
     });
 
     that.layerMenu.on("color-change", function(e) {
@@ -175,6 +187,8 @@ function IndexController() {
           }
         });
       }
+
+      updateURLState();
 
     });
 
@@ -244,6 +258,22 @@ function IndexController() {
     layers = {};
   }
 
+  function updateURLState() {
+    var menuState = layerMenu.getMenuState();
+    menuState = menuState.map(function(layer) {
+
+      delete layer.id;
+      delete layer.element;
+
+      layer.uri = layer.uri.replace(/%22/g,"'");
+
+      return layer;
+
+    });
+
+    that.statefulQueryString.set("state", encodeURIComponent(LZString.compressToBase64(JSON.stringify(menuState))));
+  }
+
   function initLayerMenu() {
     var layerMinNode         = document.querySelector("#legend-layer-menu-min"),
         layerPanelClose      = document.querySelector("#legend-layer-menu .close-button"),
@@ -281,6 +311,7 @@ function IndexController() {
       });
     }
 
+
     function buildLayer(layerObject) {
       var menuState = layerMenu.getMenuState();
 
@@ -289,18 +320,7 @@ function IndexController() {
         hideMenuItemLoadState(layerObject);
       }); //Passing a layer object
 
-      menuState = menuState.map(function(layer) {
-
-        delete layer.id;
-        delete layer.element;
-
-        layer.uri = layer.uri.replace(/%22/g,"'");
-
-        return layer;
-
-      });
-
-      that.statefulQueryString.set("state", encodeURIComponent(LZString.compressToBase64(JSON.stringify(menuState))));
+      updateURLState();
     }
 
     layerMenu.on("layerUpdated", function (e) {
