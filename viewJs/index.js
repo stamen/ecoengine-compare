@@ -199,7 +199,7 @@ function IndexController() {
         });
       }
 
-      that.utils.debounce(updateURLState, 1000)();
+      that.utils.debounce(updateURLState, 10000)();
 
     });
 
