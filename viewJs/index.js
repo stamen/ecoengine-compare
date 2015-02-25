@@ -162,6 +162,7 @@ function IndexController() {
       // Color change handler for point and hexagon layers
       //
       if (e.caller.list === "pointlayer" || e.caller.list === "hexlayer") {
+        layers[e.caller.id].getLayers()[0].options.colorRange = [e.caller.color, e.caller.color];
         layers[e.caller.id].getLayers()[0].colorScale().range([e.caller.color, e.caller.color]);
         layers[e.caller.id].getLayers()[0]._redraw();
       }
@@ -210,7 +211,6 @@ function IndexController() {
       that.map.eachLayer(function(layer) {
 
         if (layer.__sHexLayer === true) {
-        console.log(layer.getLayers()[0]);
           layer.getLayers()[0].options.radius = +e.target.value;
           layer.getLayers()[0].options.radiusRange = [1, +e.target.value];
           var data = layer.getLayers()[0]._data;
