@@ -128,11 +128,17 @@ function IndexController() {
 
     that.layerMenu.on("orderChanged", function(e) {
 
-      updateDisplayOrder(e.caller.order);
-
+      //
+      // Each layer might need to redraw
+      //
       e.caller.order.forEach(function(layerItem) {
         showLayer(layerItem);
       });
+
+      //
+      // Restack
+      //
+      updateDisplayOrder(e.caller.order);
 
       updateURLState();
     });
@@ -262,7 +268,6 @@ function IndexController() {
     var menuState = layerMenu.getMenuState();
     menuState = menuState.map(function(layer) {
 
-      delete layer.id;
       delete layer.element;
 
       layer.uri = layer.uri.replace(/%22/g,"'");
@@ -272,6 +277,17 @@ function IndexController() {
     });
 
     that.statefulQueryString.set("state", encodeURIComponent(LZString.compressToBase64(JSON.stringify(menuState))));
+  }
+
+  function _buildLayer(layerObject) {
+    var menuState = layerMenu.getMenuState();
+
+    showMenuItemLoadState(layerObject);
+    that.showLayer(layerObject, function() {
+      hideMenuItemLoadState(layerObject);
+    }); //Passing a layer object
+
+    updateURLState();
   }
 
   function initLayerMenu() {
@@ -311,18 +327,6 @@ function IndexController() {
       });
     }
 
-
-    function buildLayer(layerObject) {
-      var menuState = layerMenu.getMenuState();
-
-      showMenuItemLoadState(layerObject);
-      that.showLayer(layerObject, function() {
-        hideMenuItemLoadState(layerObject);
-      }); //Passing a layer object
-
-      updateURLState();
-    }
-
     layerMenu.on("layerUpdated", function (e) {
 
       //
@@ -331,7 +335,7 @@ function IndexController() {
       if (e.caller.updatedProperties.indexOf("uri") > -1) {
         hideLayer(e.caller.layerObject.id, e.caller.layerObject.list);
         delete layerDataCache[e.caller.layerObject.id];
-        buildLayer(e.caller.layerObject);
+        _buildLayer(e.caller.layerObject);
       }
 
     });
@@ -341,7 +345,7 @@ function IndexController() {
     //
     layerMenu.on("layerAdded", function (e) {
 
-      buildLayer(e.caller);
+      _buildLayer(e.caller);
 
     });
 
@@ -442,14 +446,22 @@ function IndexController() {
         rasterCache[layerObject.id] = layerObject.uri;
       }
 
-      if (typeof layers[layerObject.id] === "object" && layerObject.list !== "raster") {
-         that.map.removeLayer(layers[layerObject.id]);
-         delete layers[layerObject.id];
-       }
+      //
+      // Clear out data layers
+      //
+      if (layers[layerObject.id] && (layers[layerObject.id].__sOriginURI !== layerObject.uri || layers[layerObject.id].__sOriginList !== layerObject.list)) {
+        that.map.removeLayer(layers[layerObject.id]);
+        delete layers[layerObject.id];
+      }
 
-      layers[layerObject.id] = layerFactories[layerObject.list](pages, layerObject);
+      if (!layers[layerObject.id]) {
 
-      that.map.addLayer(layers[layerObject.id]);
+        layers[layerObject.id] = layerFactories[layerObject.list](pages, layerObject);
+        layers[layerObject.id].__sOriginURI = layerObject.uri;
+        layers[layerObject.id].__sOriginList = layerObject.list;
+
+        that.map.addLayer(layers[layerObject.id]);
+      }
 
     }
   }
