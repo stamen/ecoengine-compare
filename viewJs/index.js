@@ -210,9 +210,10 @@ function IndexController() {
       that.map.eachLayer(function(layer) {
 
         if (layer.__sHexLayer === true) {
+        console.log(layer.getLayers()[0]);
           layer.getLayers()[0].options.radius = +e.target.value;
           layer.getLayers()[0].options.radiusRange = [1, +e.target.value];
-          var data = layer._data;
+          var data = layer.getLayers()[0]._data;
           layer.getLayers()[0].initialize(layer.options);
           layer.getLayers()[0].data(data);
       }
