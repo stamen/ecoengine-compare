@@ -28,15 +28,18 @@ function IndexController() {
               "stroke" : false,
               "opacity" : 0.7
             }
-          });
+          }),
+          dots;
 
           features.forEach(function(feature) {
             if (feature.geometry) {
-              group.addLayer(L.marker([
+              group.addLayer(L.circleMarker([
                 feature.geometry.coordinates[1],
                 feature.geometry.coordinates[0]
                 ],{
-                  "icon" : L.divIcon({className: "point-feature-icon point-feature-icon-" + layer.color})
+                  "fillColor"   : layer.color,
+                  "fillOpacity" : 0.5,
+                  "stroke"      : false
                 }));
               }
           });
@@ -183,9 +186,11 @@ function IndexController() {
           if (layer._group) { //A layer group
             layer._group.getLayers().forEach(function(subLayer) {
 
-              if (subLayer._path) { //a polygon
+              if (subLayer._path || subLayer._radius) { //a polygon
+
                 subLayer.setStyle({
-                  "color" : e.caller.color
+                  "color" : e.caller.color,
+                  "fillColor" : e.caller.color
                 });
               }
 
@@ -194,7 +199,7 @@ function IndexController() {
         });
       }
 
-      updateURLState();
+      that.utils.debounce(updateURLState, 1000)();
 
     });
 
