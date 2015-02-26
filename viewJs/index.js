@@ -75,7 +75,10 @@ function IndexController() {
               }
             });
 
-            var data = combined.map(function(p) {
+            var data = combined.filter(function(p) {
+              // why is this necessary?
+              return !!p;
+            }).map(function(p) {
               var ret = p.d.properties;
               ret.long = p.d.geometry.coordinates[0];
               ret.lat = p.d.geometry.coordinates[1];
