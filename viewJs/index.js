@@ -61,7 +61,21 @@ function IndexController() {
             // hide data table
           });
           hex.hexClick(function(hexdata) {
-            var data = hexdata.map(function(p) {
+            var i = hexdata.i;
+            var j = hexdata.j;
+
+            var combined = [];
+
+            that.map.eachLayer(function(layer) {
+              if (layer.__sHexLayer === true) {
+                var hexdata = layer.getLayers()[0].hexagons.filter(function(d) {
+                  return (d.i == i && d.j == j);
+                }).data();
+                combined = combined.concat(hexdata[0]);
+              }
+            });
+
+            var data = combined.map(function(p) {
               var ret = p.d.properties;
               ret.long = p.d.geometry.coordinates[0];
               ret.lat = p.d.geometry.coordinates[1];
@@ -70,7 +84,6 @@ function IndexController() {
 
             var w = window.open('', 'wnd');
             w.document.body.innerHTML = "<pre>" + d3.csv.format(data) + "</pre>";
-            // export data
           });
 
           hex.data(pages.filter(function(p){return (typeof p.geometry === "object" && p.geometry !== null)}).map(function(p) {
