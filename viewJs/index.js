@@ -259,6 +259,11 @@ function IndexController() {
 
     layerNode.classList.add("progress");
 
+    //
+    // Disable the interactibility of the menu item
+    //
+    layerMenu.disableMenuItemById(layer.id);
+
     that.utils.append(layerNode, "<div id=\"floatingCirclesG\" class=\"loading\"><div class=\"f_circleG\" id=\"frotateG_01\"></div><div class=\"f_circleG\" id=\"frotateG_02\"></div><div class=\"f_circleG\" id=\"frotateG_03\"></div><div class=\"f_circleG\" id=\"frotateG_04\"></div><div class=\"f_circleG\" id=\"frotateG_05\"></div><div class=\"f_circleG\" id=\"frotateG_06\"></div><div class=\"f_circleG\" id=\"frotateG_07\"></div><div class=\"f_circleG\" id=\"frotateG_08\"></div></div>");
   }
 
@@ -267,6 +272,11 @@ function IndexController() {
         loadingNode = layerNode.querySelector(".loading");
 
     layerNode.classList.remove("progress");
+
+    //
+    // Enable the interactibility of the menu item
+    //
+    layerMenu.enableMenuItemById(layer.id);
 
     if (loadingNode) {
       loadingNode.parentNode.removeChild(loadingNode);
