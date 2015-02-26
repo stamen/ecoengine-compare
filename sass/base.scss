@@ -6,6 +6,13 @@
   #map {
     width:100vw;
     height:100vh;
+
+    svg {
+      pointer-events: none;
+    }
+    .hexbin-hexagon {
+      pointer-events: all;
+    }
   }
 
   .point-feature-icon {
