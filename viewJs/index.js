@@ -224,6 +224,7 @@ function IndexController() {
     // Hexagon radius slider
     //
     document.querySelector("#hexagon-radius").addEventListener("change", function(e) {
+      document.querySelector("label[for=hexagon-radius]").innerHTML = "Radius " + document.querySelector("#hexagon-radius").value + "px";
       that.map.eachLayer(function(layer) {
 
         if (layer.__sHexLayer === true) {
@@ -232,10 +233,12 @@ function IndexController() {
           var data = layer.getLayers()[0]._data;
           layer.getLayers()[0].initialize(layer.options);
           layer.getLayers()[0].data(data);
-      }
+        }
 
       });
     });
+
+    document.querySelector("label[for=hexagon-radius]").innerHTML = "Radius " + document.querySelector("#hexagon-radius").value + "px";
 
   }
 
