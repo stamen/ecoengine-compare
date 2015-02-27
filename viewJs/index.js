@@ -3,9 +3,11 @@
 function IndexController() {
 
   var that           = this,
+      recordLimit    = 100000,
       layers         = {},
       layerDataCache = {},
       rasterCache    = {},
+      requests       = {},
       layerFactories = {
         "pointlayer": function (pages, layer) {
           var hex = new L.HexbinLayer({
@@ -119,8 +121,6 @@ function IndexController() {
   // Convenience methods for browsers
   //
   that.utils = STPX.browsersugar.mix({});
-
-  window.slayers = layers;
 
   //
   // Initialize leaflet and related plugins
@@ -278,7 +278,7 @@ function IndexController() {
 
     layerNode.classList.add("progress");
 
-    that.utils.append(layerNode, "<div id=\"floatingCirclesG\" class=\"loading\"><div class=\"f_circleG\" id=\"frotateG_01\"></div><div class=\"f_circleG\" id=\"frotateG_02\"></div><div class=\"f_circleG\" id=\"frotateG_03\"></div><div class=\"f_circleG\" id=\"frotateG_04\"></div><div class=\"f_circleG\" id=\"frotateG_05\"></div><div class=\"f_circleG\" id=\"frotateG_06\"></div><div class=\"f_circleG\" id=\"frotateG_07\"></div><div class=\"f_circleG\" id=\"frotateG_08\"></div></div>");
+    that.utils.append(layerNode, "<div class=\"loaderwrapper\"><div id=\"floatingCirclesG\" class=\"loading\"><div class=\"f_circleG\" id=\"frotateG_01\"></div><div class=\"f_circleG\" id=\"frotateG_02\"></div><div class=\"f_circleG\" id=\"frotateG_03\"></div><div class=\"f_circleG\" id=\"frotateG_04\"></div><div class=\"f_circleG\" id=\"frotateG_05\"></div><div class=\"f_circleG\" id=\"frotateG_06\"></div><div class=\"f_circleG\" id=\"frotateG_07\"></div><div class=\"f_circleG\" id=\"frotateG_08\"></div></div></div>");
   }
 
   //
@@ -287,7 +287,7 @@ function IndexController() {
   //
   function hideMenuItemLoadState(layer) {
     var layerNode   = layerMenu.getLayerNode(layer),
-        loadingNode = layerNode.querySelector(".loading");
+        loadingNode = layerNode.querySelector(".loaderwrapper");
 
     layerNode.classList.remove("progress");
 
@@ -450,6 +450,22 @@ function IndexController() {
     });
 
     //
+    // When a layer is clicked
+    //
+    layerMenu.on("layer-click", function(e) {
+
+      var loaderWrapper = that.utils.parentHasClass(e.caller.event.target, "loaderwrapper", 3);
+
+      //
+      // Clicking on loader
+      //
+      if (loaderWrapper) {
+        ecoEngineClient.stopRecursiveRequest(requests[e.caller.layerObject.id].id);
+      }
+
+    });
+
+    //
     // In mobile view there is a button to open the layermenu
     // this opens it
     //
@@ -538,7 +554,7 @@ function IndexController() {
     // Make an eco engine client
     //
     if (!ecoEngineClient) {
-      var ecoEngineClient = new STMN.EcoengineClient();
+      ecoEngineClient = new STMN.EcoengineClient();
     }
 
     //
@@ -554,7 +570,7 @@ function IndexController() {
 
     } else {
 
-      return ecoEngineClient.requestRecursive(layerObject.uri.replace(/'/g,'"'),
+      requests[layerObject.id] = ecoEngineClient.requestRecursive(layerObject.uri.replace(/'/g,'"'),
       function(pages) { //Done
 
         layerDataCache[layerObject.id] = pages;

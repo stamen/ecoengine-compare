@@ -169,6 +169,16 @@ body {
     }
   }
 
+  .loaderwrapper {
+    width: 31px;
+    height: 29px;
+    position: absolute;
+    top: 0;
+    right: 0;
+    box-sizing: border-box;
+    cursor: pointer;
+  }
+
   .loading {
     position:absolute;
     top:8px;
@@ -184,6 +194,7 @@ body {
     right:5px;
 
     .f_circleG{
+    cursor:pointer;
     position:absolute;
     background-color:#eee;
     height:3px;
