@@ -120,6 +120,8 @@ function IndexController() {
   //
   that.utils = STPX.browsersugar.mix({});
 
+  window.slayers = layers;
+
   //
   // Initialize leaflet and related plugins
   //
@@ -155,6 +157,12 @@ function IndexController() {
       //
       e.caller.order.forEach(function(layerItem) {
         showLayer(layerItem);
+      });
+
+      that.on("showLayer", function() {
+
+        updateDisplayOrder(that.layerMenu.getLayerOrder());
+
       });
 
       //
