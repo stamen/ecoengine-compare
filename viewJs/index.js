@@ -58,14 +58,35 @@ function IndexController() {
               }).addTo(that.map);
 
           hex.hexMouseOver(function(d) {
-            // console.log(d);
+            var combined = combine(d);
+            that.popup = L.popup({
+                closeButton: false 
+              })
+              .setLatLng(that.map.layerPointToLatLng([d.x,d.y]))
+              .setContent("" + combined.length + " Observations<br/><span style='color: #999;font-size: 0.8em;'>Click to export</span>")
+              .openOn(that.map);
           });
+
           hex.hexMouseOut(function(d) {
-            // hide data table
+            d3.selectAll(".leaflet-popup").style("display", "none");
           });
-          hex.hexClick(function(hexdata) {
-            var i = hexdata.i;
-            var j = hexdata.j;
+
+          hex.hexClick(function(d) {
+            var w = window.open('', 'wnd');
+            w.document.body.innerHTML = "<pre>" + d3.csv.format(combine(d)) + "</pre>";
+          });
+
+          hex.data(pages.filter(function(p){return (typeof p.geometry === "object" && p.geometry !== null)}).map(function(p) {
+            p[0] = p.geometry.coordinates[0];
+            p[1] = p.geometry.coordinates[1];
+            return p;
+          }));
+
+          var hexGroup = L.featureGroup([hex]).addTo(that.map);
+
+          function combine(d) {
+            var i = d.i;
+            var j = d.j;
 
             var combined = [];
 
@@ -88,17 +109,8 @@ function IndexController() {
               return ret;
             });
 
-            var w = window.open('', 'wnd');
-            w.document.body.innerHTML = "<pre>" + d3.csv.format(data) + "</pre>";
-          });
-
-          hex.data(pages.filter(function(p){return (typeof p.geometry === "object" && p.geometry !== null)}).map(function(p) {
-            p[0] = p.geometry.coordinates[0];
-            p[1] = p.geometry.coordinates[1];
-            return p;
-          }));
-
-          var hexGroup = L.featureGroup([hex]).addTo(that.map);
+            return data;
+          };
 
           hexGroup.__sHexLayer = true;
 
@@ -251,7 +263,7 @@ function IndexController() {
     });
 
     document.querySelector("label[for=hexagon-radius]").innerHTML = "Radius " + document.querySelector("#hexagon-radius").value + "px";
-
+    
   }
 
   //

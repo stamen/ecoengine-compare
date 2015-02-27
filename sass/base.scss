@@ -14,6 +14,11 @@
       pointer-events: all;
       opacity: 0.65;
     }
+
+    .leaflet-popup{
+      pointer-events: none;
+      margin-top: -3px;
+    }
   }
 
   .point-feature-icon {
