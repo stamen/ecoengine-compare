@@ -120,6 +120,9 @@ function IndexController() {
   //
   that.utils = STPX.browsersugar.mix({});
 
+  //
+  // Initialize leaflet and related plugins
+  //
   function initMap() {
 
     // create a map in the "map" div, set the view to a given place and zoom
@@ -242,47 +245,52 @@ function IndexController() {
 
   }
 
+  //
+  // Restack leaflet layers to match the
+  // legend layer menu order
+  //
   function updateDisplayOrder(order) {
 
-    order.forEach(function(layer) {
+    order.forEach(function(layer, i) {
 
-      if (layers[layer.id] && layers[layer.id].bringToBack) {
-        layers[layer.id].bringToBack();
+      if (layers[layer.id] && layers[layer.id].setZIndex) {
+        layers[layer.id].setZIndex(i+1);
       }
 
     });
   }
 
+  //
+  // Turn the loading state of layer menu
+  // on
+  //
   function showMenuItemLoadState(layer) {
 
     var layerNode = layerMenu.getLayerNode(layer);
 
     layerNode.classList.add("progress");
 
-    //
-    // Disable the interactibility of the menu item
-    //
-    layerMenu.disableMenuItemById(layer.id);
-
     that.utils.append(layerNode, "<div id=\"floatingCirclesG\" class=\"loading\"><div class=\"f_circleG\" id=\"frotateG_01\"></div><div class=\"f_circleG\" id=\"frotateG_02\"></div><div class=\"f_circleG\" id=\"frotateG_03\"></div><div class=\"f_circleG\" id=\"frotateG_04\"></div><div class=\"f_circleG\" id=\"frotateG_05\"></div><div class=\"f_circleG\" id=\"frotateG_06\"></div><div class=\"f_circleG\" id=\"frotateG_07\"></div><div class=\"f_circleG\" id=\"frotateG_08\"></div></div>");
   }
 
+  //
+  // Turn the loading state of layer menu
+  // off
+  //
   function hideMenuItemLoadState(layer) {
     var layerNode   = layerMenu.getLayerNode(layer),
         loadingNode = layerNode.querySelector(".loading");
 
     layerNode.classList.remove("progress");
 
-    //
-    // Enable the interactibility of the menu item
-    //
-    layerMenu.enableMenuItemById(layer.id);
-
     if (loadingNode) {
       loadingNode.parentNode.removeChild(loadingNode);
     }
   }
 
+  //
+  // Clear all data layers
+  //
   function clearLayers() {
 
     that.map.eachLayer(function(layer) {
@@ -299,6 +307,9 @@ function IndexController() {
     layers = {};
   }
 
+  //
+  // Update the state saved to the URL
+  //
   function updateURLState() {
     var menuState = layerMenu.getMenuState();
     menuState = menuState.map(function(layer) {
@@ -314,6 +325,9 @@ function IndexController() {
     that.statefulQueryString.set("state", encodeURIComponent(LZString.compressToBase64(JSON.stringify(menuState))));
   }
 
+  //
+  // The following methods take a layer config
+  //
   function _buildLayer(layerObject) {
     var menuState = layerMenu.getMenuState();
 
@@ -325,6 +339,43 @@ function IndexController() {
     updateURLState();
   }
 
+  function buildLayer(layerObject, pages) {
+
+    //
+    // Don't proceed if this is a cached raster
+    //
+    if (!layerObject.list === "raster" || (!rasterCache[layerObject.id] || rasterCache[layerObject.id] !== layerObject.uri)) {
+
+      //
+      // Cache this raster layer
+      //
+      if (layerObject.list === "raster") {
+        rasterCache[layerObject.id] = layerObject.uri;
+      }
+
+      //
+      // Clear out data layers
+      //
+      if (layers[layerObject.id] && (layers[layerObject.id].__sOriginURI !== layerObject.uri || layers[layerObject.id].__sOriginList !== layerObject.list)) {
+        that.map.removeLayer(layers[layerObject.id]);
+        delete layers[layerObject.id];
+      }
+
+      if (!layers[layerObject.id]) {
+
+        layers[layerObject.id] = layerFactories[layerObject.list](pages, layerObject);
+        layers[layerObject.id].__sOriginURI = layerObject.uri;
+        layers[layerObject.id].__sOriginList = layerObject.list;
+
+        that.map.addLayer(layers[layerObject.id]);
+      }
+
+    }
+  }
+
+  //
+  // Set up the legend layer menu and associated events
+  //
   function initLayerMenu() {
     var layerMinNode         = document.querySelector("#legend-layer-menu-min"),
         layerPanelClose      = document.querySelector("#legend-layer-menu .close-button"),
@@ -467,40 +518,6 @@ function IndexController() {
 
   }
 
-  function buildLayer(layerObject, pages) {
-
-    //
-    // Don't proceed if this is a cached raster
-    //
-    if (!layerObject.list === "raster" || (!rasterCache[layerObject.id] || rasterCache[layerObject.id] !== layerObject.uri)) {
-
-      //
-      // Cache this raster layer
-      //
-      if (layerObject.list === "raster") {
-        rasterCache[layerObject.id] = layerObject.uri;
-      }
-
-      //
-      // Clear out data layers
-      //
-      if (layers[layerObject.id] && (layers[layerObject.id].__sOriginURI !== layerObject.uri || layers[layerObject.id].__sOriginList !== layerObject.list)) {
-        that.map.removeLayer(layers[layerObject.id]);
-        delete layers[layerObject.id];
-      }
-
-      if (!layers[layerObject.id]) {
-
-        layers[layerObject.id] = layerFactories[layerObject.list](pages, layerObject);
-        layers[layerObject.id].__sOriginURI = layerObject.uri;
-        layers[layerObject.id].__sOriginList = layerObject.list;
-
-        that.map.addLayer(layers[layerObject.id]);
-      }
-
-    }
-  }
-
   function showLayer(layerObject, callback) {
 
     //
@@ -530,6 +547,7 @@ function IndexController() {
       },
       function(pages) { //Progress
 
+        layerDataCache[layerObject.id] = pages;
         buildLayer(layerObject, pages);
 
         that.fire("showLayerProgress");
