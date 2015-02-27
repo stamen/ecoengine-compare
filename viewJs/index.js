@@ -113,7 +113,7 @@ function IndexController() {
         }
       },
       rasterLayers = [],
-      layerMenu, shareButtonElement;
+      layerMenu, shareButtonElement, ecoEngineClient;
 
   //
   // Convenience methods for browsers
@@ -337,6 +337,7 @@ function IndexController() {
   // The following methods take a layer config
   //
   function _buildLayer(layerObject) {
+
     var menuState = layerMenu.getMenuState();
 
     showMenuItemLoadState(layerObject);
@@ -349,36 +350,41 @@ function IndexController() {
 
   function buildLayer(layerObject, pages) {
 
-    //
-    // Don't proceed if this is a cached raster
-    //
-    if (!layerObject.list === "raster" || (!rasterCache[layerObject.id] || rasterCache[layerObject.id] !== layerObject.uri)) {
+    if (layerObject && pages) {
 
       //
-      // Cache this raster layer
+      // Don't proceed if this is a cached raster
       //
-      if (layerObject.list === "raster") {
-        rasterCache[layerObject.id] = layerObject.uri;
-      }
+      if (!layerObject.list === "raster" || (!rasterCache[layerObject.id] || rasterCache[layerObject.id] !== layerObject.uri)) {
 
-      //
-      // Clear out data layers
-      //
-      if (layers[layerObject.id] && (layers[layerObject.id].__sOriginURI !== layerObject.uri || layers[layerObject.id].__sOriginList !== layerObject.list)) {
-        that.map.removeLayer(layers[layerObject.id]);
-        delete layers[layerObject.id];
-      }
+        //
+        // Cache this raster layer
+        //
+        if (layerObject.list === "raster") {
+          rasterCache[layerObject.id] = layerObject.uri;
+        }
 
-      if (!layers[layerObject.id]) {
+        //
+        // Clear out data layers
+        //
+        if (layers[layerObject.id]) {
+          that.map.removeLayer(layers[layerObject.id]);
+          delete layers[layerObject.id];
+        }
 
-        layers[layerObject.id] = layerFactories[layerObject.list](pages, layerObject);
-        layers[layerObject.id].__sOriginURI = layerObject.uri;
-        layers[layerObject.id].__sOriginList = layerObject.list;
+        if (!layers[layerObject.id]) {
 
-        that.map.addLayer(layers[layerObject.id]);
+          layers[layerObject.id] = layerFactories[layerObject.list](pages, layerObject);
+          layers[layerObject.id].__sOriginURI = layerObject.uri;
+          layers[layerObject.id].__sOriginList = layerObject.list;
+
+          that.map.addLayer(layers[layerObject.id]);
+        }
+
       }
 
     }
+
   }
 
   //
@@ -529,6 +535,13 @@ function IndexController() {
   function showLayer(layerObject, callback) {
 
     //
+    // Make an eco engine client
+    //
+    if (!ecoEngineClient) {
+      var ecoEngineClient = new STMN.EcoengineClient();
+    }
+
+    //
     // At this time we will only fetch a layer once per page load
     // for that reason we can assume that if we have data for a layer
     // we can use it. One could force an update by deleting the
@@ -541,7 +554,7 @@ function IndexController() {
 
     } else {
 
-      return (new STMN.EcoengineClient).requestRecursive(layerObject.uri.replace(/'/g,'"'),
+      return ecoEngineClient.requestRecursive(layerObject.uri.replace(/'/g,'"'),
       function(pages) { //Done
 
         layerDataCache[layerObject.id] = pages;
