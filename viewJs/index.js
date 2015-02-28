@@ -571,6 +571,18 @@ function IndexController() {
     }
 
     //
+    // Set a limit on number of records per layer
+    //
+    that.on("page-recieved", function(e) {
+
+      //TODO: Notify the user that the max has been reached in a passive way
+      if (e.caller.data >= recordLimit) {
+        ecoEngineClient.stopRecursiveRequest(e.caller.target.id);
+      }
+
+    });
+
+    //
     // At this time we will only fetch a layer once per page load
     // for that reason we can assume that if we have data for a layer
     // we can use it. One could force an update by deleting the
