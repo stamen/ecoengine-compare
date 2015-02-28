@@ -3,7 +3,7 @@
 function IndexController() {
 
   var that           = this,
-      recordLimit    = 100000,
+      recordLimit    = 50000,
       layers         = {},
       layerDataCache = {},
       rasterCache    = {},
@@ -60,7 +60,7 @@ function IndexController() {
           hex.hexMouseOver(function(d) {
             var combined = combine(d);
             that.popup = L.popup({
-                closeButton: false 
+                closeButton: false
               })
               .setLatLng(that.map.layerPointToLatLng([d.x,d.y]))
               .setContent("" + combined.length + " Observations<br/><span style='color: #999;font-size: 0.8em;'>Click to export</span>")
@@ -263,7 +263,7 @@ function IndexController() {
     });
 
     document.querySelector("label[for=hexagon-radius]").innerHTML = "Radius " + document.querySelector("#hexagon-radius").value + "px";
-    
+
   }
 
   //
@@ -578,6 +578,8 @@ function IndexController() {
       //TODO: Notify the user that the max has been reached in a passive way
       if (e.caller.data >= recordLimit) {
         ecoEngineClient.stopRecursiveRequest(e.caller.target.id);
+
+        swal("A layer has reached the maximum number of records (" + recordLimit + ") and has been stopped.");
       }
 
     });
@@ -596,7 +598,11 @@ function IndexController() {
     } else {
 
       requests[layerObject.id] = ecoEngineClient.requestRecursive(layerObject.uri.replace(/'/g,'"'),
-      function(pages) { //Done
+      function(err, pages) { //Done
+
+        if (err) {
+          swal("Loading problem","There was an error communicating with the server for the request labeled " + layerObject.label);
+        }
 
         layerDataCache[layerObject.id] = pages;
         buildLayer(layerObject, pages);
@@ -607,7 +613,7 @@ function IndexController() {
           callback();
         }
       },
-      function(pages) { //Progress
+      function(err, pages) { //Progress
 
         layerDataCache[layerObject.id] = pages;
         buildLayer(layerObject, pages);
