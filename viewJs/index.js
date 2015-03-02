@@ -2,13 +2,14 @@
 
 function IndexController() {
 
-  var that           = this,
-      recordLimit    = 50000,
-      layers         = {},
-      layerDataCache = {},
-      rasterCache    = {},
-      requests       = {},
-      layerFactories = {
+  var that             = this,
+      recordLimit      = 50000,
+      layers           = {},
+      layerDataCache   = {},
+      rasterCache      = {},
+      layerObjectCache = {},
+      requests         = {},
+      layerFactories   = {
         "pointlayer": function (pages, layer) {
           var hex = new L.HexbinLayer({
                   radiusRange : [1,1],
@@ -117,6 +118,7 @@ function IndexController() {
           return hexGroup;
         },
         "raster" : function (pages, layer) {
+          console.log(pages, layer);
           rasterLayers.push(L.tileLayer(layer.uri, {
             transparent: true,
             unloadInvisibleTiles: true
@@ -169,6 +171,7 @@ function IndexController() {
       // Each layer might need to redraw
       //
       e.caller.order.forEach(function(layerItem) {
+        layerObjectCache[layerItem.id] = layerItem;
         showLayer(layerItem);
       });
 
@@ -191,12 +194,15 @@ function IndexController() {
       that.map.removeLayer(layers[e.caller]);
       delete layers[e.caller];
       delete layerDataCache[e.caller];
+      delete layerObjectCache[e.caller];
 
       updateURLState();
 
     });
 
     that.layerMenu.on("color-change", function(e) {
+
+      layerObjectCache[layerObject.id] = e.caller;
 
       //
       // Color change handler for point and hexagon layers
@@ -363,18 +369,23 @@ function IndexController() {
 
   function buildLayer(layerObject, pages) {
 
-    if (layerObject && pages) {
+    if (!layerObjectCache[layerObject.id]) {
+      layerObjectCache[layerObject.id] = layerObject;
+    }
+
+
+    if (layerObjectCache[layerObject.id] && pages || layerObjectCache[layerObject.id].list === "raster") {
 
       //
       // Don't proceed if this is a cached raster
       //
-      if (!layerObject.list === "raster" || (!rasterCache[layerObject.id] || rasterCache[layerObject.id] !== layerObject.uri)) {
+      if (!layerObjectCache[layerObject.id].list === "raster" || (!rasterCache[layerObject.id] || rasterCache[layerObject.id] !== layerObject.uri)) {
 
         //
         // Cache this raster layer
         //
-        if (layerObject.list === "raster") {
-          rasterCache[layerObject.id] = layerObject.uri;
+        if (layerObjectCache[layerObject.id].list === "raster") {
+          rasterCache[layerObject.id] = layerObjectCache[layerObject.id].uri;
         }
 
         //
@@ -387,9 +398,9 @@ function IndexController() {
 
         if (!layers[layerObject.id]) {
 
-          layers[layerObject.id] = layerFactories[layerObject.list](pages, layerObject);
-          layers[layerObject.id].__sOriginURI = layerObject.uri;
-          layers[layerObject.id].__sOriginList = layerObject.list;
+          layers[layerObject.id]               = layerFactories[layerObjectCache[layerObject.id].list](pages, layerObjectCache[layerObject.id]);
+          layers[layerObject.id].__sOriginURI  = layerObjectCache[layerObject.id].uri;
+          layers[layerObject.id].__sOriginList = layerObjectCache[layerObject.id].list;
 
           that.map.addLayer(layers[layerObject.id]);
         }
@@ -600,8 +611,8 @@ function IndexController() {
       requests[layerObject.id] = ecoEngineClient.requestRecursive(layerObject.uri.replace(/'/g,'"'),
       function(err, pages) { //Done
 
-        if (err) {
-          swal("Loading problem","There was an error communicating with the server for the request labeled " + layerObject.label);
+        if (err && err.status !==0 /* aborted */) {
+          swal("Loading problem","There was an error communicating with the server for the request labeled \"" + layerObject.label + "\"");
         }
 
         layerDataCache[layerObject.id] = pages;
