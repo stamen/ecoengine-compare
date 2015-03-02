@@ -12,8 +12,8 @@ function IndexController() {
       layerFactories   = {
         "pointlayer": function (pages, layer) {
           var hex = new L.HexbinLayer({
-                  radiusRange : [1,1],
-                  radius: 1,
+                  radiusRange : [4,4],
+                  radius: 2,
                   opacity: 1,
                   colorRange: [layer.color, layer.color]
               }).addTo(that.map);
