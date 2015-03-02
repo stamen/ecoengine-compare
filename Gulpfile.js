@@ -15,11 +15,10 @@ var copy           = require("gulp-copy"),
     webserver      = require("gulp-webserver"),
     concat         = require('gulp-concat'),
     mainBowerFiles = require('main-bower-files'),
-    wrap           = require("gulp-wrap");
+    wrap           = require("gulp-wrap"),
+    autopolyfiller = require("gulp-autopolyfiller");
 
 // Gulp mix-ins
-
-require("gulp-autopolyfiller");
 require("gulp-watch");
 
 var paths = {
@@ -42,6 +41,7 @@ gulp.task("default",function() {
   gulp.start("templates");
   gulp.start("sass");
   gulp.start("vendor-css");
+  gulp.start("autopolyfiller");
 });
 
 gulp.task("dist",function() {
@@ -57,6 +57,7 @@ gulp.task("dist",function() {
   gulp.start("templates");
   gulp.start("sass");
   gulp.start("vendor-css");
+  gulp.start("autopolyfiller");
 });
 
 //
@@ -137,6 +138,12 @@ gulp.task("uglifyViewJs", function() {
   .pipe(gulp.dest(paths.publicJs));
 });
 
+gulp.task('autopolyfiller', function () {
+  return gulp.src(paths.publicJs + "/*.js")
+      .pipe(autopolyfiller('polyfill.js'))
+      .pipe(gulp.dest("./build/legacy"));
+});
+
 //
 // Build handlebars templates
 // and create html files from them in
@@ -197,7 +204,7 @@ gulp.task("vendor-css", function() {
 // Watch directories for changes
 //
 gulp.task("watch", function() {
-  gulp.watch(mainBowerFiles("**/*.js").concat([paths.js, paths.viewJs]),["lint", "uglify", "uglifyViewJs"]);
+  gulp.watch(mainBowerFiles("**/*.js").concat([paths.js, paths.viewJs]),["lint", "uglify", "uglifyViewJs","autopolyfiller"]);
   console.log("watching directory:", paths.js);
 
   gulp.watch(paths.templates, ["set-env","templates"]);
