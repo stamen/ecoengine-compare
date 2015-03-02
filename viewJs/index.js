@@ -432,6 +432,8 @@ function IndexController() {
       startingMenuState = null;
     }
 
+    console.log(STMN.LegendLayerMenu);
+
     layerMenu = new STMN.LegendLayerMenu("#legend-layer-menu", {
       "menuState" : startingMenuState
     });
