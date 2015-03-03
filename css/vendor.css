@@ -557,6 +557,10 @@
     position: relative;
     font-size: 125%;
     font-weight: normal; }
+    .legend-layer-menu h2 .input-form button {
+      margin-right: 5px; }
+    .legend-layer-menu h2 .input-form.hidden {
+      display: none; }
   .legend-layer-menu select {
     width: 100%; }
   .legend-layer-menu .content-container {
@@ -564,10 +568,9 @@
     .legend-layer-menu .content-container button {
       border: solid 1px #aaa;
       background-color: white;
-      padding: 3px 5px;
-      margin-left: 10px; }
+      padding: 3px 5px; }
     .legend-layer-menu .content-container button:hover {
-      background-color: #67abec;
+      background-color: #00b4e4;
       color: white;
       cursor: pointer; }
   .legend-layer-menu .dropzone {
@@ -579,7 +582,7 @@
   .legend-layer-menu .drop-active {
     border-color: #333; }
   .legend-layer-menu .drop-target {
-    background-color: #67abec; }
+    background-color: #00b4e4; }
   .legend-layer-menu .drag-drop {
     display: inline-block;
     min-width: 40px;

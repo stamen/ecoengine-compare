@@ -2,37 +2,47 @@
 
 function IndexController() {
 
-  var that           = this,
-      layers         = {},
-      layerDataCache = {},
-      dropZoneLayers = {
+  var that             = this,
+      recordLimit      = 50000,
+      layers           = {},
+      layerDataCache   = {},
+      rasterCache      = {},
+      layerObjectCache = {},
+      requests         = {},
+      layerFactories   = {
         "pointlayer": function (pages, layer) {
           var hex = new L.HexbinLayer({
-                  radiusRange : [1,1],
-                  radius: 1,
+                  radiusRange : [4,4],
+                  radius: 2,
                   opacity: 1,
                   colorRange: [layer.color, layer.color]
               }).addTo(that.map);
           hex.data(pages.filter(function(p){return (typeof p.geometry === "object" && p.geometry !== null)}).map(function(p) {return p.geometry.coordinates;}));
-          return hex;
+
+          var hexGroup = L.featureGroup([hex]).addTo(that.map);
+
+          return hexGroup;
         },
         "hulllayer": function (features, layer) {
-
           var group = new L.MarkerClusterGroup({
+            "maxClusterRadius" : 80,
             "polygonOptions" : {
               "color"  : layer.color,
               "stroke" : false,
               "opacity" : 0.7
             }
-          });
+          }),
+          dots;
 
           features.forEach(function(feature) {
             if (feature.geometry) {
-              group.addLayer(L.marker([
+              group.addLayer(L.circleMarker([
                 feature.geometry.coordinates[1],
                 feature.geometry.coordinates[0]
                 ],{
-                  "icon" : L.divIcon({className: "point-feature-icon point-feature-icon-" + layer.color})
+                  "fillColor"   : layer.color,
+                  "fillOpacity" : 0.5,
+                  "stroke"      : false
                 }));
               }
           });
@@ -40,30 +50,31 @@ function IndexController() {
           return group;
         },
         "hexlayer": function (pages, layer) {
+          var hexRadius = +document.querySelector("#hexagon-radius").value;
           var hex = new L.HexbinLayer({
-                  radiusRange : [1,document.querySelector("#hexagon-radius").value],
-                  radius: document.querySelector("#hexagon-radius").value,
+                  radiusRange : [Math.max(1,Math.sqrt(hexRadius)-1),hexRadius],
+                  radius: hexRadius,
                   opacity: 1,
                   colorRange: [layer.color, layer.color]
               }).addTo(that.map);
 
           hex.hexMouseOver(function(d) {
-            // console.log(d);
+            var combined = combine(d);
+            that.popup = L.popup({
+                closeButton: false
+              })
+              .setLatLng(that.map.layerPointToLatLng([d.x,d.y]))
+              .setContent("" + combined.length + " Observations<br/><span style='color: #999;font-size: 0.8em;'>Click to export</span>")
+              .openOn(that.map);
           });
-          hex.hexMouseOut(function(d) {
-            // hide data table
-          });
-          hex.hexClick(function(hexdata) {
-            var data = hexdata.map(function(p) {
-              var ret = p.d.properties;
-              ret.long = p.d.geometry.coordinates[0];
-              ret.lat = p.d.geometry.coordinates[1];
-              return ret;
-            });
 
+          hex.hexMouseOut(function(d) {
+            d3.selectAll(".leaflet-popup").style("display", "none");
+          });
+
+          hex.hexClick(function(d) {
             var w = window.open('', 'wnd');
-            w.document.body.innerHTML = "<pre>" + d3.csv.format(data) + "</pre>";
-            // export data
+            w.document.body.innerHTML = "<pre>" + d3.csv.format(combine(d)) + "</pre>";
           });
 
           hex.data(pages.filter(function(p){return (typeof p.geometry === "object" && p.geometry !== null)}).map(function(p) {
@@ -72,11 +83,42 @@ function IndexController() {
             return p;
           }));
 
-          hex.options.__sHexLayer = true;
+          var hexGroup = L.featureGroup([hex]).addTo(that.map);
 
-          return hex;
+          function combine(d) {
+            var i = d.i;
+            var j = d.j;
+
+            var combined = [];
+
+            that.map.eachLayer(function(layer) {
+              if (layer.__sHexLayer === true) {
+                var hexdata = layer.getLayers()[0].hexagons.filter(function(d) {
+                  return (d.i == i && d.j == j);
+                }).data();
+                combined = combined.concat(hexdata[0]);
+              }
+            });
+
+            var data = combined.filter(function(p) {
+              // why is this necessary?
+              return !!p;
+            }).map(function(p) {
+              var ret = p.d.properties;
+              ret.long = p.d.geometry.coordinates[0];
+              ret.lat = p.d.geometry.coordinates[1];
+              return ret;
+            });
+
+            return data;
+          };
+
+          hexGroup.__sHexLayer = true;
+
+          return hexGroup;
         },
         "raster" : function (pages, layer) {
+          console.log(pages, layer);
           rasterLayers.push(L.tileLayer(layer.uri, {
             transparent: true,
             unloadInvisibleTiles: true
@@ -88,20 +130,27 @@ function IndexController() {
         }
       },
       rasterLayers = [],
-      layerMenu, shareButtonElement;
+      layerMenu, shareButtonElement, ecoEngineClient;
 
   //
   // Convenience methods for browsers
   //
   that.utils = STPX.browsersugar.mix({});
 
+  //
+  // Initialize leaflet and related plugins
+  //
   function initMap() {
 
     // create a map in the "map" div, set the view to a given place and zoom
     that.map = L.map("map", {
       "minZoom" : 2,
+      "maxZoom" : 17,
       "scrollWheelZoom" : false
     }).setView([37.5333, -77.4667], 2);
+
+    window.STMN.map = that.map;
+    window.STMN.layers = layers;
 
     (new L.Hash(that.map));
 
@@ -113,23 +162,55 @@ function IndexController() {
     }))
     rasterLayers[rasterLayers.length-1].addTo(that.map);
 
+    rasterCache["baselayer"] = "http://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png";
+    layers["baselayer"] = rasterLayers[rasterLayers.length-1];
+
     that.layerMenu.on("orderChanged", function(e) {
 
-      clearLayers();
-
+      //
+      // Each layer might need to redraw
+      //
       e.caller.order.forEach(function(layerItem) {
+        layerObjectCache[layerItem.id] = layerItem;
         showLayer(layerItem);
       });
+
+      that.on("showLayer", function() {
+
+        updateDisplayOrder(that.layerMenu.getLayerOrder());
+
+      });
+
+      //
+      // Restack
+      //
+      updateDisplayOrder(e.caller.order);
+
+      updateURLState();
+    });
+
+    that.layerMenu.on("layerRemoved", function(e) {
+
+      that.map.removeLayer(layers[e.caller]);
+      delete layers[e.caller];
+      delete layerDataCache[e.caller];
+      delete layerObjectCache[e.caller];
+
+      updateURLState();
+
     });
 
     that.layerMenu.on("color-change", function(e) {
+
+      layerObjectCache[layerObject.id] = e.caller;
 
       //
       // Color change handler for point and hexagon layers
       //
       if (e.caller.list === "pointlayer" || e.caller.list === "hexlayer") {
-        layers[e.caller.id].colorScale().range([e.caller.color, e.caller.color]);
-        layers[e.caller.id]._redraw();
+        layers[e.caller.id].getLayers()[0].options.colorRange = [e.caller.color, e.caller.color];
+        layers[e.caller.id].getLayers()[0].colorScale().range([e.caller.color, e.caller.color]);
+        layers[e.caller.id].getLayers()[0]._redraw();
       }
 
       //
@@ -152,9 +233,11 @@ function IndexController() {
           if (layer._group) { //A layer group
             layer._group.getLayers().forEach(function(subLayer) {
 
-              if (subLayer._path) { //a polygon
+              if (subLayer._path || subLayer._radius) { //a polygon
+
                 subLayer.setStyle({
-                  "color" : e.caller.color
+                  "color" : e.caller.color,
+                  "fillColor" : e.caller.color
                 });
               }
 
@@ -163,39 +246,67 @@ function IndexController() {
         });
       }
 
+      that.utils.debounce(updateURLState, 10000)();
+
     });
 
     //
     // Hexagon radius slider
     //
     document.querySelector("#hexagon-radius").addEventListener("change", function(e) {
+      document.querySelector("label[for=hexagon-radius]").innerHTML = "Radius " + document.querySelector("#hexagon-radius").value + "px";
       that.map.eachLayer(function(layer) {
 
-        if (layer.options.__sHexLayer === true) {
-          layer.options.radius = +e.target.value;
-          layer.options.radiusRange = [1, +e.target.value];
-          var data = layer._data;
-          layer.initialize(layer.options);
-          layer.data(data);
-      }
+        if (layer.__sHexLayer === true) {
+          layer.getLayers()[0].options.radius = +e.target.value;
+          layer.getLayers()[0].options.radiusRange = [Math.max(1,Math.sqrt(+e.target.value)-1), +e.target.value];
+          var data = layer.getLayers()[0]._data;
+          layer.getLayers()[0].initialize(layer.options);
+          layer.getLayers()[0].data(data);
+        }
 
       });
     });
 
+    document.querySelector("label[for=hexagon-radius]").innerHTML = "Radius " + document.querySelector("#hexagon-radius").value + "px";
+
   }
 
+  //
+  // Restack leaflet layers to match the
+  // legend layer menu order
+  //
+  function updateDisplayOrder(order) {
+
+    order.forEach(function(layer, i) {
+
+      if (layers[layer.id] && layers[layer.id].setZIndex) {
+        layers[layer.id].setZIndex(i+1);
+      }
+
+    });
+  }
+
+  //
+  // Turn the loading state of layer menu
+  // on
+  //
   function showMenuItemLoadState(layer) {
 
     var layerNode = layerMenu.getLayerNode(layer);
 
     layerNode.classList.add("progress");
 
-    that.utils.append(layerNode, "<div id=\"floatingCirclesG\" class=\"loading\"><div class=\"f_circleG\" id=\"frotateG_01\"></div><div class=\"f_circleG\" id=\"frotateG_02\"></div><div class=\"f_circleG\" id=\"frotateG_03\"></div><div class=\"f_circleG\" id=\"frotateG_04\"></div><div class=\"f_circleG\" id=\"frotateG_05\"></div><div class=\"f_circleG\" id=\"frotateG_06\"></div><div class=\"f_circleG\" id=\"frotateG_07\"></div><div class=\"f_circleG\" id=\"frotateG_08\"></div></div>");
+    that.utils.append(layerNode, "<div class=\"loaderwrapper\"><div id=\"floatingCirclesG\" class=\"loading\"><div class=\"f_circleG\" id=\"frotateG_01\"></div><div class=\"f_circleG\" id=\"frotateG_02\"></div><div class=\"f_circleG\" id=\"frotateG_03\"></div><div class=\"f_circleG\" id=\"frotateG_04\"></div><div class=\"f_circleG\" id=\"frotateG_05\"></div><div class=\"f_circleG\" id=\"frotateG_06\"></div><div class=\"f_circleG\" id=\"frotateG_07\"></div><div class=\"f_circleG\" id=\"frotateG_08\"></div></div></div>");
   }
 
+  //
+  // Turn the loading state of layer menu
+  // off
+  //
   function hideMenuItemLoadState(layer) {
     var layerNode   = layerMenu.getLayerNode(layer),
-        loadingNode = layerNode.querySelector(".loading");
+        loadingNode = layerNode.querySelector(".loaderwrapper");
 
     layerNode.classList.remove("progress");
 
@@ -204,16 +315,105 @@ function IndexController() {
     }
   }
 
+  //
+  // Clear all data layers
+  //
   function clearLayers() {
 
     that.map.eachLayer(function(layer) {
-      that.map.removeLayer(layer);
+
+      //
+      // Clear everything but rasters
+      //
+      if (typeof layer.getTileUrl !== "function") {
+        that.map.removeLayer(layer);
+      }
+
     });
 
-    rasterLayers = [];
     layers = {};
   }
 
+  //
+  // Update the state saved to the URL
+  //
+  function updateURLState() {
+    var menuState = layerMenu.getMenuState();
+    menuState = menuState.map(function(layer) {
+
+      delete layer.element;
+
+      layer.uri = layer.uri.replace(/%22/g,"'");
+
+      return layer;
+
+    });
+
+    that.statefulQueryString.set("state", encodeURIComponent(LZString.compressToBase64(JSON.stringify(menuState))));
+  }
+
+  //
+  // The following methods take a layer config
+  //
+  function _buildLayer(layerObject) {
+
+    var menuState = layerMenu.getMenuState();
+
+    showMenuItemLoadState(layerObject);
+    that.showLayer(layerObject, function() {
+      hideMenuItemLoadState(layerObject);
+    }); //Passing a layer object
+
+    updateURLState();
+  }
+
+  function buildLayer(layerObject, pages) {
+
+    if (!layerObjectCache[layerObject.id]) {
+      layerObjectCache[layerObject.id] = layerObject;
+    }
+
+
+    if (layerObjectCache[layerObject.id] && pages || layerObjectCache[layerObject.id].list === "raster") {
+
+      //
+      // Don't proceed if this is a cached raster
+      //
+      if (!layerObjectCache[layerObject.id].list === "raster" || (!rasterCache[layerObject.id] || rasterCache[layerObject.id] !== layerObject.uri)) {
+
+        //
+        // Cache this raster layer
+        //
+        if (layerObjectCache[layerObject.id].list === "raster") {
+          rasterCache[layerObject.id] = layerObjectCache[layerObject.id].uri;
+        }
+
+        //
+        // Clear out data layers
+        //
+        if (layers[layerObject.id]) {
+          that.map.removeLayer(layers[layerObject.id]);
+          delete layers[layerObject.id];
+        }
+
+        if (!layers[layerObject.id]) {
+
+          layers[layerObject.id]               = layerFactories[layerObjectCache[layerObject.id].list](pages, layerObjectCache[layerObject.id]);
+          layers[layerObject.id].__sOriginURI  = layerObjectCache[layerObject.id].uri;
+          layers[layerObject.id].__sOriginList = layerObjectCache[layerObject.id].list;
+
+          that.map.addLayer(layers[layerObject.id]);
+        }
+
+      }
+
+    }
+
+  }
+
+  //
+  // Set up the legend layer menu and associated events
+  //
   function initLayerMenu() {
     var layerMinNode         = document.querySelector("#legend-layer-menu-min"),
         layerPanelClose      = document.querySelector("#legend-layer-menu .close-button"),
@@ -231,6 +431,8 @@ function IndexController() {
     } catch (err) {
       startingMenuState = null;
     }
+
+    console.log(STMN.LegendLayerMenu);
 
     layerMenu = new STMN.LegendLayerMenu("#legend-layer-menu", {
       "menuState" : startingMenuState
@@ -251,31 +453,41 @@ function IndexController() {
       });
     }
 
+    layerMenu.on("layerUpdated", function (e) {
+
+      //
+      // If the URI has changed, update the layer
+      //
+      if (e.caller.updatedProperties.indexOf("uri") > -1) {
+        hideLayer(e.caller.layerObject.id, e.caller.layerObject.list);
+        delete layerDataCache[e.caller.layerObject.id];
+        _buildLayer(e.caller.layerObject);
+      }
+
+    });
+
     //
     // when a layer is added, put it on the map
     //
     layerMenu.on("layerAdded", function (e) {
 
-      var layer     = e.caller,
-          menuState = layerMenu.getMenuState();
+      _buildLayer(e.caller);
 
-      showMenuItemLoadState(layer);
-      that.showLayer(layer, function() {
-        hideMenuItemLoadState(layer);
-      }); //Passing a layer object
+    });
 
-      menuState = menuState.map(function(layer) {
+    //
+    // When a layer is clicked
+    //
+    layerMenu.on("layer-click", function(e) {
 
-        delete layer.id;
-        delete layer.element;
+      var loaderWrapper = that.utils.parentHasClass(e.caller.event.target, "loaderwrapper", 3);
 
-        layer.uri = layer.uri.replace(/%22/g,"'");
-
-        return layer;
-
-      });
-
-      that.statefulQueryString.set("state", encodeURIComponent(LZString.compressToBase64(JSON.stringify(menuState))));
+      //
+      // Clicking on loader
+      //
+      if (loaderWrapper) {
+        ecoEngineClient.stopRecursiveRequest(requests[e.caller.layerObject.id].id);
+      }
 
     });
 
@@ -349,7 +561,7 @@ function IndexController() {
 
           } else {
 
-            swal("Uh oh", "We were not able to create a short URL. Please check your connection and try again in a few minutes.", "error");
+            swal("Here's the thing", "We were not able to create a short URL. Please check your connection and try again in a few minutes.", "error");
 
           }
         };
@@ -362,19 +574,28 @@ function IndexController() {
 
   }
 
-  function buildLayer(layerObject, pages) {
-
-    if (typeof layers[layerObject.id] === "object" && layerObject.list !== "raster") {
-       that.map.removeLayer(layers[layerObject.id]);
-       delete layers[layerObject.id];
-     }
-
-    layers[layerObject.id] = dropZoneLayers[layerObject.list](pages, layerObject);
-
-    that.map.addLayer(layers[layerObject.id]);
-  }
-
   function showLayer(layerObject, callback) {
+
+    //
+    // Make an eco engine client
+    //
+    if (!ecoEngineClient) {
+      ecoEngineClient = new STMN.EcoengineClient();
+    }
+
+    //
+    // Set a limit on number of records per layer
+    //
+    that.on("page-recieved", function(e) {
+
+      //TODO: Notify the user that the max has been reached in a passive way
+      if (e.caller.data >= recordLimit) {
+        ecoEngineClient.stopRecursiveRequest(e.caller.target.id);
+
+        swal("A layer has reached the maximum number of records (" + recordLimit + ") and has been stopped.");
+      }
+
+    });
 
     //
     // At this time we will only fetch a layer once per page load
@@ -382,14 +603,19 @@ function IndexController() {
     // we can use it. One could force an update by deleting the
     // cache entry for a layer
     //
+
     if (layerDataCache[layerObject.id] || layerObject.list === "raster") {
 
       buildLayer(layerObject, layerDataCache[layerObject.id]);
 
     } else {
 
-      return (new STMN.EcoengineClient).requestRecursive(layerObject.uri.replace(/'/g,'"'),
-      function(pages) { //Done
+      requests[layerObject.id] = ecoEngineClient.requestRecursive(layerObject.uri.replace(/'/g,'"'),
+      function(err, pages) { //Done
+
+        if (err && err.status !==0 /* aborted */) {
+          swal("Loading problem","There was an error communicating with the server for the request labeled \"" + layerObject.label + "\"");
+        }
 
         layerDataCache[layerObject.id] = pages;
         buildLayer(layerObject, pages);
@@ -400,8 +626,9 @@ function IndexController() {
           callback();
         }
       },
-      function(pages) { //Progress
+      function(err, pages) { //Progress
 
+        layerDataCache[layerObject.id] = pages;
         buildLayer(layerObject, pages);
 
         that.fire("showLayerProgress");
