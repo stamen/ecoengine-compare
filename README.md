@@ -1,5 +1,7 @@
 # Berkeley Eco Engine compare demo
 
+For issues with this repository, please file over at Open [http://github.com/stamen/ecoengine/issues](http://github.com/stamen/ecoengine/issues)
+
 ## Setup
 
 ```bash
