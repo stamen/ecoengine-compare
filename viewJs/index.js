@@ -118,7 +118,6 @@ function IndexController() {
           return hexGroup;
         },
         "raster" : function (pages, layer) {
-          console.log(pages, layer);
           rasterLayers.push(L.tileLayer(layer.uri, {
             transparent: true,
             unloadInvisibleTiles: true
@@ -432,8 +431,6 @@ function IndexController() {
       startingMenuState = null;
     }
 
-    console.log(STMN.LegendLayerMenu);
-
     layerMenu = new STMN.LegendLayerMenu("#legend-layer-menu", {
       "menuState" : startingMenuState
     });
@@ -584,20 +581,6 @@ function IndexController() {
     }
 
     //
-    // Set a limit on number of records per layer
-    //
-    that.on("page-recieved", function(e) {
-
-      //TODO: Notify the user that the max has been reached in a passive way
-      if (e.caller.data >= recordLimit) {
-        ecoEngineClient.stopRecursiveRequest(e.caller.target.id);
-
-        swal("A layer has reached the maximum number of records (" + recordLimit + ") and has been stopped.");
-      }
-
-    });
-
-    //
     // At this time we will only fetch a layer once per page load
     // for that reason we can assume that if we have data for a layer
     // we can use it. One could force an update by deleting the
@@ -614,11 +597,15 @@ function IndexController() {
       function(err, pages) { //Done
 
         if (err && err.status !==0 /* aborted */) {
-          swal("Loading problem","There was an error communicating with the server for the request labeled \"" + layerObject.label + "\"");
+          layerMenu.showLayerError(layerObject.id, "Loading problem","There was an error communicating with the server");
         }
 
-        layerDataCache[layerObject.id] = pages;
-        buildLayer(layerObject, pages);
+        if (!pages.length) {
+          layerMenu.showLayerError(layerObject.id, "This query returned 0 records.");
+        } else {
+          layerDataCache[layerObject.id] = pages;
+          buildLayer(layerObject, pages);
+        }
 
         that.fire("showLayer");
 
@@ -630,6 +617,12 @@ function IndexController() {
 
         layerDataCache[layerObject.id] = pages;
         buildLayer(layerObject, pages);
+
+        if (pages.length >= recordLimit) {
+          ecoEngineClient.stopRecursiveRequest(layerObject.id);
+
+          layerMenu.showLayerError(layerObject.id, "A layer has reached the maximum number of records (" + recordLimit + ") and has been stopped.");
+        }
 
         that.fire("showLayerProgress");
       });
