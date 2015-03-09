@@ -483,7 +483,10 @@ function IndexController() {
       // Clicking on loader
       //
       if (loaderWrapper) {
-        ecoEngineClient.stopRecursiveRequest(requests[e.caller.layerObject.id].id);
+        layerMenu.showLayerError(e.caller.layerObject.id, "This layer was canceled before it's data had loaded compleatly");
+        requests[e.caller.layerObject.id].forEach(function() {
+          ecoEngineClient.stopRecursiveRequest(requests[e.caller.layerObject.id][0].id);
+        });
       }
 
     });
@@ -597,10 +600,10 @@ function IndexController() {
       function(err, pages) { //Done
 
         if (err && err.status !==0 /* aborted */) {
-          layerMenu.showLayerError(layerObject.id, "Loading problem","There was an error communicating with the server");
+          layerMenu.showLayerError(layerObject.id, "There was an error communicating with the server");
         }
 
-        if (!pages.length) {
+        if (pages && !pages.length) {
           layerMenu.showLayerError(layerObject.id, "This query returned 0 records.");
         } else {
           layerDataCache[layerObject.id] = pages;

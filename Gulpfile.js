@@ -48,7 +48,23 @@ gulp.task("dist",function() {
   gulp.start("set-env");
   env({
     vars: {
-      "siteroot" : "http://studio.stamen.com/berkeley/show/compare/" //production root URL
+      "siteroot" : "./" //production root URL
+    }
+  });
+  gulp.start("lint");
+  gulp.start("uglify");
+  gulp.start("uglifyViewJs");
+  gulp.start("templates");
+  gulp.start("sass");
+  gulp.start("vendor-css");
+  gulp.start("autopolyfiller");
+});
+
+gulp.task("dist:holos",function() {
+  gulp.start("set-env");
+  env({
+    vars: {
+      "headless" : true
     }
   });
   gulp.start("lint");
