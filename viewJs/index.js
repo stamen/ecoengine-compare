@@ -118,6 +118,7 @@ function IndexController() {
           return hexGroup;
         },
         "raster" : function (pages, layer) {
+
           rasterLayers.push(L.tileLayer(layer.uri, {
             transparent: true,
             unloadInvisibleTiles: true
@@ -126,9 +127,11 @@ function IndexController() {
           rasterLayers[rasterLayers.length-1].addTo(that.map);
 
           return rasterLayers[rasterLayers.length-1];
+
         }
       },
       rasterLayers = [],
+      startingMenuState = {},
       layerMenu, shareButtonElement, ecoEngineClient;
 
   //
@@ -140,6 +143,8 @@ function IndexController() {
   // Initialize leaflet and related plugins
   //
   function initMap() {
+
+    var selectNode;
 
     // create a map in the "map" div, set the view to a given place and zoom
     that.map = L.map("map", {
@@ -156,13 +161,32 @@ function IndexController() {
     //
     // Add base-layer
     //
-    rasterLayers.push(L.tileLayer("http://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png", {
+    rasterLayers.push(L.tileLayer(document.querySelector("#layer-select").value, {
       attribution: "&copy; <a href=\"http://osm.org/copyright\">OpenStreetMap</a> contributors"
     }))
     rasterLayers[rasterLayers.length-1].addTo(that.map);
 
-    rasterCache["baselayer"] = "http://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png";
-    layers["baselayer"] = rasterLayers[rasterLayers.length-1];
+    rasterCache["baselayer"] = document.querySelector("#layer-select").value;
+    layers["baselayer"] = document.querySelector("#layer-select").value;
+
+    //
+    // Set up map state
+    //
+    if (startingMenuState.d) {
+      for (var i in startingMenuState.d) {
+        if (startingMenuState.d.hasOwnProperty(i) && startingMenuState.d[i].length) {
+          selectNode = document.querySelector("#" + i);
+
+          if (selectNode) {
+            buildLayer({
+              "list" : "raster",
+              "id"   : selectNode.getAttribute("data-id"),
+              "uri"  : startingMenuState.d[i]
+            });
+          }
+        }
+      }
+    }
 
     that.layerMenu.on("orderChanged", function(e) {
 
@@ -265,6 +289,8 @@ function IndexController() {
         }
 
       });
+
+      updateURLState();
     });
 
     document.querySelector("label[for=hexagon-radius]").innerHTML = "Radius " + document.querySelector("#hexagon-radius").value + "px";
@@ -337,7 +363,9 @@ function IndexController() {
   // Update the state saved to the URL
   //
   function updateURLState() {
-    var menuState = layerMenu.getMenuState();
+    var menuState = layerMenu.getMenuState(),
+        fullState = {};
+
     menuState = menuState.map(function(layer) {
 
       delete layer.element;
@@ -348,7 +376,11 @@ function IndexController() {
 
     });
 
-    that.statefulQueryString.set("state", encodeURIComponent(LZString.compressToBase64(JSON.stringify(menuState))));
+    fullState["m"] = menuState; //Data layers
+    fullState["d"] = layerMenu.getDropdownState(); //Raster layers
+    fullState["r"] = document.querySelector("#hexagon-radius").value; //Radius slider
+
+    that.statefulQueryString.set("state", encodeURIComponent(LZString.compressToBase64(JSON.stringify(fullState))));
   }
 
   //
@@ -371,7 +403,6 @@ function IndexController() {
     if (!layerObjectCache[layerObject.id]) {
       layerObjectCache[layerObject.id] = layerObject;
     }
-
 
     if (layerObjectCache[layerObject.id] && pages || layerObjectCache[layerObject.id].list === "raster") {
 
@@ -417,8 +448,7 @@ function IndexController() {
     var layerMinNode         = document.querySelector("#legend-layer-menu-min"),
         layerPanelClose      = document.querySelector("#legend-layer-menu .close-button"),
         uriSegmentRegEx      = /"uri":"([^"]+)"/,
-        menuStateStringParts = [],
-        startingMenuState;
+        menuStateStringParts = [];
 
     //
     // The menu state taken from the URL might be corrupted. Lets try to make it
@@ -428,21 +458,31 @@ function IndexController() {
     try {
       startingMenuState = JSON.parse(decodeURIComponent(LZString.decompressFromBase64(that.statefulQueryString.get("state"))));
     } catch (err) {
-      startingMenuState = null;
+      //Really nothing to do. It's no big deal if this doesn't work
     }
 
     layerMenu = new STMN.LegendLayerMenu("#legend-layer-menu", {
-      "menuState" : startingMenuState
+      "menuState" : startingMenuState.m,
+      "dropdownState" : startingMenuState.d
     });
     that.layerMenu = layerMenu;
 
     //
+    // Set up hex radius
+    //
+    if (startingMenuState.r) {
+      document.querySelector("#hexagon-radius").value = startingMenuState.r;
+    }
+
+    //
     // Add layers to the map if there are any
     //
-    startingMenuState = layerMenu.getMenuState(); //This has more data attached to it after being passed through the constructor
+    if (startingMenuState && !startingMenuState.m) {
+      startingMenuState.m = layerMenu.getMenuState(); //This has more data attached to it after being passed through the constructor
+    }
 
-    if (startingMenuState) {
-      startingMenuState.forEach(function(layer) {
+    if (startingMenuState.m) {
+      startingMenuState.m.forEach(function(layer) {
         showMenuItemLoadState(layer);
         that.showLayer(layer, function() {
           hideMenuItemLoadState(layer);
