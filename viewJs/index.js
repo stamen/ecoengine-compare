@@ -483,7 +483,7 @@ function IndexController() {
       // Clicking on loader
       //
       if (loaderWrapper) {
-        layerMenu.showLayerError(e.caller.layerObject.id, "This layer was canceled before it's data had loaded compleatly");
+        layerMenu.showLayerError(e.caller.layerObject.id, "This layer was canceled before it's data had loaded completely");
         requests[e.caller.layerObject.id].forEach(function() {
           ecoEngineClient.stopRecursiveRequest(requests[e.caller.layerObject.id][0].id);
         });
