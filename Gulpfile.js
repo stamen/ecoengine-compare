@@ -16,7 +16,8 @@ var copy           = require("gulp-copy"),
     concat         = require('gulp-concat'),
     mainBowerFiles = require('main-bower-files'),
     wrap           = require("gulp-wrap"),
-    autopolyfiller = require("gulp-autopolyfiller");
+    autopolyfiller = require("gulp-autopolyfiller"),
+    del            = require("del");
 
 // Gulp mix-ins
 require("gulp-watch");
@@ -27,17 +28,17 @@ var paths = {
   templates: "./templates/*.handlebars",
   js: "./js/*.js",
   viewJs: "./viewJs/*.js",
-  publicJs: "./build/js"
+  publicJs: "./build/js/stamen"
 };
 
 //
 // Run all default tasks
 //
 gulp.task("default",function() {
+  gulp.start("cleanup");
   gulp.start("set-env");
   gulp.start("lint");
   gulp.start("uglify");
-  gulp.start("uglifyViewJs");
   gulp.start("templates");
   gulp.start("sass");
   gulp.start("vendor-css");
@@ -45,6 +46,7 @@ gulp.task("default",function() {
 });
 
 gulp.task("dist",function() {
+  gulp.start("cleanup");
   gulp.start("set-env");
   env({
     vars: {
@@ -53,7 +55,6 @@ gulp.task("dist",function() {
   });
   gulp.start("lint");
   gulp.start("uglify");
-  gulp.start("uglifyViewJs");
   gulp.start("templates");
   gulp.start("sass");
   gulp.start("vendor-css");
@@ -61,20 +62,35 @@ gulp.task("dist",function() {
 });
 
 gulp.task("dist:holos",function() {
-  gulp.start("set-env");
-  env({
-    vars: {
-      "headless" : true
-    }
+
+  gulp.start("cleanup");
+  run("cp ./holos/holos-init.js ./js/holos-init.js", {}).exec(function () {
+    run("cp ./holos/holos-handlebars.json ./data/holos-handlebars.json", {}).exec(function () {
+      gulp.start("set-env");
+      gulp.start("lint");
+      gulp.start("uglify");
+      gulp.start("sass");
+      gulp.start("vendor-css");
+      gulp.start("autopolyfiller");
+    });
   });
-  gulp.start("lint");
-  gulp.start("uglify");
-  gulp.start("uglifyViewJs");
-  gulp.start("templates");
-  gulp.start("sass");
-  gulp.start("vendor-css");
-  gulp.start("autopolyfiller");
 });
+
+gulp.task("cleanup:holos",function(cb) {
+
+  del([
+    "./js/holos-init.js",
+    "./data/holos-handlebars.json"
+  ], cb);
+
+});
+
+gulp.task("cleanup",function(cb) {
+
+  run("rm -rf ./build/*", {}).exec();
+
+});
+
 
 //
 //
@@ -116,7 +132,7 @@ gulp.task("lint", function() {
 
 gulp.task("uglify", function() {
   gulp
-    .src(mainBowerFiles("**/*.js").concat([paths.js]))
+    .src(mainBowerFiles("**/*.js").concat([paths.js, paths.viewJs]))
     .pipe(sourcemaps.init())
     .pipe(concat('ecoengine-compare.js'))
     .pipe(gulp.dest(paths.publicJs))
@@ -134,26 +150,6 @@ gulp.task("uglify", function() {
     .pipe(gulp.dest(paths.publicJs));
 });
 
-gulp.task("uglifyViewJs", function() {
-  gulp
-  .src([paths.viewJs])
-  .pipe(sourcemaps.init())
-  .pipe(wrap("(function(STMN){<%= contents %>}(window.STMN));"))
-  .pipe(gulp.dest(paths.publicJs)).on("error", function(e) {
-    console.log("Uglify view error:\x07",e.message, " on line: ", e.lineNumber);
-    return this.end();
-  })
-  .pipe(uglify({
-    mangle: true,
-    output: {
-      beautify: false
-    }
-  }))
-  .pipe(rename({extname: ".min.js"}))
-  .pipe(sourcemaps.write("./")) // Write a sourcemap for browser debugging
-  .pipe(gulp.dest(paths.publicJs));
-});
-
 gulp.task('autopolyfiller', function () {
   return gulp.src(paths.publicJs + "/*.js")
       .pipe(autopolyfiller('polyfill.js'))
@@ -169,7 +165,7 @@ gulp.task("templates", function() {
   gulp
     .src("./templates/*.handlebars")
     .pipe(hb({
-      data: "./src/assets/data/**/*.{js,json}",
+      data: "./data/**/*.{js,json}",
       helpers: [
         "./helpers/*.js"
       ],
@@ -179,6 +175,22 @@ gulp.task("templates", function() {
     }))
     .pipe(rename({extname: ".html"}))
     .pipe(gulp.dest("./build/"));
+});
+
+gulp.task("templates:holos", function() {
+  gulp
+    .src("./templates/*.handlebars")
+    .pipe(hb({
+      data: "./data/**/*.{js,json}",
+      helpers: [
+        "./helpers/*.js"
+      ],
+      partials: [
+        "./templates/partials/*.handlebars"
+      ]
+    }))
+    .pipe(rename({extname: ".html"}))
+    .pipe(gulp.dest("./build/templates/"));
 });
 
 //
@@ -220,7 +232,7 @@ gulp.task("vendor-css", function() {
 // Watch directories for changes
 //
 gulp.task("watch", function() {
-  gulp.watch(mainBowerFiles("**/*.js").concat([paths.js, paths.viewJs]),["lint", "uglify", "uglifyViewJs","autopolyfiller"]);
+  gulp.watch(mainBowerFiles("**/*.js").concat([paths.js, paths.viewJs]),["lint", "uglify", "autopolyfiller"]);
   console.log("watching directory:", paths.js);
 
   gulp.watch(paths.templates, ["set-env","templates"]);

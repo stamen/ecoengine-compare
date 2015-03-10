@@ -3,7 +3,7 @@
 function IndexController() {
 
   var that             = this,
-      recordLimit      = 50000,
+      recordLimit      = 100000,
       layers           = {},
       layerDataCache   = {},
       rasterCache      = {},
@@ -662,7 +662,7 @@ function IndexController() {
         buildLayer(layerObject, pages);
 
         if (pages.length >= recordLimit) {
-          ecoEngineClient.stopRecursiveRequest(layerObject.id);
+          ecoEngineClient.stopRecursiveRequest(requests[layerObject.id].id);
 
           layerMenu.showLayerError(layerObject.id, "A layer has reached the maximum number of records (" + recordLimit + ") and has been stopped.");
         }
@@ -684,6 +684,13 @@ function IndexController() {
 
   }
 
+  function init() {
+    initStatefulQuerystring();
+    initLayerMenu();
+    initMap();
+    initShareButton();
+  }
+
   //
   // Public interface
   //
@@ -695,10 +702,15 @@ function IndexController() {
   //
   // Init
   //
-  initStatefulQuerystring();
-  initLayerMenu();
-  initMap();
-  initShareButton();
+  if (!STMN.dynamicTemplate || (STMN.dynamicTemplate && STMN.dynamicTemplateReady)) {
+
+    init();
+
+  } else {
+
+    STMN.onTemplateReady = init;
+
+  }
 
   return that;
 

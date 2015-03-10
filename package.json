@@ -20,7 +20,7 @@
   "homepage": "https://github.com/stamen/ecoengine-compare",
   "dependencies": {
     "gulp-watch": "~3.0.0",
-    "gulp": "~3.8.10",
+    "gulp": "~3.8.11",
     "gulp-rename": "~1.2.0",
     "gulp-compile-handlebars": "~0.4.4",
     "gulp-jshint": "~1.9.0",
@@ -41,6 +41,7 @@
     "main-bower-files": "~2.5.0",
     "gulp-wrap": "~0.10.0",
     "wrap": "~0.1.2",
-    "escape-string-regexp": "~1.0.2"
+    "escape-string-regexp": "~1.0.2",
+    "del": "~1.1.1"
   }
 }
