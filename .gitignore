@@ -31,6 +31,4 @@ bower_components
 
 .sass-cache
 
-build-branch
-
 .env.json
