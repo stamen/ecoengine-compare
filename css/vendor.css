@@ -552,7 +552,8 @@
   width: 270px;
   padding: 10px;
   background-color: #fff;
-  box-sizing: border-box; }
+  box-sizing: border-box;
+  /* a fix for layering in FireFox: https://github.com/stamen/ecoengine/issues/133 */ }
   .legend-layer-menu h2 {
     position: relative;
     font-size: 125%;
@@ -650,6 +651,19 @@
       height: 20px;
       float: left;
       cursor: pointer; }
+  .legend-layer-menu .draggable .error {
+    color: #00b4e4;
+    font-size: 75%;
+    border: solid 1px #00b4e4;
+    padding: 2px 5px;
+    margin-left: 7px;
+    line-height: 1.4em;
+    display: none;
+    margin-right: 6px;
+    margin-bottom: 5px;
+    margin-top: 1px; }
+  .legend-layer-menu.prompting .draggable {
+    z-index: 0; }
 
 /*# sourceMappingURL=legend-layer-menu.css.map */
 
