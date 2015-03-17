@@ -1,9 +1,9 @@
 (function() {
   "use strict";
 
-  window.STMN = STMN || {};
+  window.STMN = window.STMN || {};
 
-  STMN.dynamicTemplate = true;
+  window.STMN.dynamicTemplate = true;
 
   function request(uri, callback) {
     if (window && window.XMLHttpRequest) {
@@ -40,11 +40,11 @@
 
       containerDiv.innerHTML = r.responseText;
 
-      STMN.dynamicTemplateReady = true;
+      window.STMN.dynamicTemplateReady = true;
       if (typeof STMN.onTemplateReady === "function") {
-        STMN.onTemplateReady();
+        window.STMN.onTemplateReady();
       }
 
     });
   }
-});
+}());

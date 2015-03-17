@@ -3,7 +3,7 @@
 function IndexController() {
 
   var that             = this,
-      recordLimit      = 100000,
+      recordLimit      = 50000,
       layers           = {},
       layerDataCache   = {},
       rasterCache      = {},
@@ -702,15 +702,7 @@ function IndexController() {
   //
   // Init
   //
-  if (!STMN.dynamicTemplate || (STMN.dynamicTemplate && STMN.dynamicTemplateReady)) {
-
-    init();
-
-  } else {
-
-    STMN.onTemplateReady = init;
-
-  }
+  init();
 
   return that;
 

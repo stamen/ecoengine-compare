@@ -62,13 +62,12 @@ gulp.task("dist",function() {
 });
 
 gulp.task("dist:holos",function() {
-
-  gulp.start("cleanup");
-  run("cp ./holos/holos-init.js ./js/holos-init.js", {}).exec(function () {
+  run("cp ./holos/holos-init.js ./build/js/stamen/holos-init.js", {}).exec(function () {
     run("cp ./holos/holos-handlebars.json ./data/holos-handlebars.json", {}).exec(function () {
       gulp.start("set-env");
       gulp.start("lint");
       gulp.start("uglify");
+      gulp.start("templates:holos");
       gulp.start("sass");
       gulp.start("vendor-css");
       gulp.start("autopolyfiller");
@@ -79,7 +78,6 @@ gulp.task("dist:holos",function() {
 gulp.task("cleanup:holos",function(cb) {
 
   del([
-    "./js/holos-init.js",
     "./data/holos-handlebars.json"
   ], cb);
 
