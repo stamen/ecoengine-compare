@@ -47,7 +47,7 @@ _All bower components are bundled into the minified JS for the site. Any require
 Follow these steps if integrating with Holos
    1. Run `gulp dist:holos` the root directory
    2. Copy the contents of the build directory to the holos filesystem and rename it static.
-   3. Create an HTML document at the same level as the static directory
+   3. Create an HTML document at the same level as the static directory. Include a container with the ID `ecoengine-compare-container`
    4. In the `<head>` of this new document link to `../static/css/vendor.css` as well as `../static/css/base.css` in that order
    5. At the end of the `<body>` of this new document link to `./build/js/stamen/ecoengine-compare.min.js`
 
