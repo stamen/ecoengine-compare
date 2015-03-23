@@ -63,14 +63,16 @@ gulp.task("dist",function() {
 
 gulp.task("dist:holos",function() {
   run("cp ./holos/holos-init.js ./build/js/stamen/holos-init.js", {}).exec(function () {
-    run("cp ./holos/holos-handlebars.json ./data/holos-handlebars.json", {}).exec(function () {
-      gulp.start("set-env");
-      gulp.start("lint");
-      gulp.start("uglify");
-      gulp.start("templates:holos");
-      gulp.start("sass");
-      gulp.start("vendor-css");
-      gulp.start("autopolyfiller");
+    run("mkdir ./data", {}).exec(function () {
+      run("cp ./holos/holos-handlebars.json ./data/holos-handlebars.json", {}).exec(function () {
+        gulp.start("set-env");
+        gulp.start("lint");
+        gulp.start("uglify");
+        gulp.start("templates:holos");
+        gulp.start("sass");
+        gulp.start("vendor-css");
+        gulp.start("autopolyfiller");
+      });
     });
   });
 });
