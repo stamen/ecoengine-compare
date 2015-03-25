@@ -31289,7 +31289,17 @@ function IndexController() {
   //
   // Init
   //
-  init();
+  if (STMN.dynamicTemplate) {
+    if (STMN.dynamicTemplateReady) {
+      console.log("template ready");
+      init();
+    } else {
+      console.log("template not ready");
+      window.STMN.onTemplateReady = init;
+    }
+  } else {
+    init();
+  }
 
   return that;
 
