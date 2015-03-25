@@ -17463,12 +17463,10 @@ L.MarkerClusterGroup.include({
         recursiveRequests[id] = [];
       }
 
-      //console.log(id);
-
       recursiveRequests[id].push({
         "id"  : id,
         "uri" : uri,
-        "xhr" : request(recursiveRequests[id][0] ? recursiveRequests[id][0].uri : uri, function(err, r) {
+        "xhr" : request(uri, function(err, r) {
 
           if (recursiveRequests[id][0] && recursiveRequests[id][0].callback) {
             if (err) {
