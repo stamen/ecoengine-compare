@@ -53,7 +53,6 @@
       append(containerDiv, r.responseText, function() {
 
         window.STMN.dynamicTemplateReady = true;
-        console.log("window.STMN.onTemplateReady", window.STMN.onTemplateReady);
         if (typeof STMN.onTemplateReady === "function") {
           window.STMN.onTemplateReady();
         }
