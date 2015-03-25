@@ -163,12 +163,12 @@ gulp.task("templates:holos", function() {
   gulp
     .src("./templates/*.handlebars")
     .pipe(hb({
-      data: "./data/**/*.{js,json}",
+      data: ["./data/**/*.{js,json}","./holos/holos-templates.json"],
       helpers: [
         "./helpers/*.js"
       ],
       partials: [
-        "./templates/partials-holos/*.handlebars"
+        "./templates/partials/*.handlebars"
       ]
     }))
     .pipe(rename({extname: ".html"}))

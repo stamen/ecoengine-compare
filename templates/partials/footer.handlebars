@@ -1,3 +1,6 @@
+{{#if headless}}
+<div>
+{{else}}
 <script>
 window.STMN = {};
 
@@ -8,3 +11,4 @@ STMN.googleKey = "{{envVariable var="google-key"}}";
 
 </body>
 </html>
+{{/if}}
