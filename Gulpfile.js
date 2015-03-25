@@ -114,7 +114,7 @@ gulp.task("uglify", function() {
 
 gulp.task("js:holos", function() {
   gulp
-    .src(mainBowerFiles("./holos/*.js").concat([paths.js, paths.viewJs]))
+    .src("./holos/*.js")
     .pipe(sourcemaps.init())
     .pipe(concat('holos-init.js'))
     .pipe(gulp.dest(paths.publicJs))

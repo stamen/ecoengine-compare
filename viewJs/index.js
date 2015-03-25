@@ -702,7 +702,15 @@ function IndexController() {
   //
   // Init
   //
-  init();
+  if (STMN.dynamicTemplate) {
+    if (STMN.dynamicTemplateReady) {
+      init();
+    } else {
+      window.STMN.onTemplateReady = init;
+    }
+  } else {
+    init();
+  }
 
   return that;
 

@@ -5,6 +5,18 @@
 
   window.STMN.dynamicTemplate = true;
 
+  function append(rootNode, html, callback) {
+    var div = document.createElement("div");
+    div.innerHTML = html;
+    while (div.children.length > 0) {
+      rootNode.appendChild(div.children[0]);
+    }
+
+    callback();
+
+    return div.children[0];
+  }
+
   function request(uri, callback) {
     if (window && window.XMLHttpRequest) {
       var xmlHttp = null;
@@ -36,14 +48,16 @@
   var containerDiv = document.getElementById("ecoengine-compare-container");
 
   if (containerDiv) {
-    request("./static/templates/index.html", function (err, r) {
+    request("./templates/index.html", function (err, r) {
 
-      containerDiv.innerHTML = r.responseText;
+      append(containerDiv, r.responseText, function() {
 
-      window.STMN.dynamicTemplateReady = true;
-      if (typeof STMN.onTemplateReady === "function") {
-        window.STMN.onTemplateReady();
-      }
+        window.STMN.dynamicTemplateReady = true;
+        console.log("window.STMN.onTemplateReady", window.STMN.onTemplateReady);
+        if (typeof STMN.onTemplateReady === "function") {
+          window.STMN.onTemplateReady();
+        }
+      });
 
     });
   }
