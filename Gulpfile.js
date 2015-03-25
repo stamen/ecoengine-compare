@@ -39,50 +39,12 @@ gulp.task("default",function() {
   gulp.start("set-env");
   gulp.start("lint");
   gulp.start("uglify");
+  gulp.start("js:holos");
   gulp.start("templates");
+  gulp.start("templates:holos");
   gulp.start("sass");
   gulp.start("vendor-css");
   gulp.start("autopolyfiller");
-});
-
-gulp.task("dist",function() {
-  gulp.start("cleanup");
-  gulp.start("set-env");
-  env({
-    vars: {
-      "siteroot" : "./" //production root URL
-    }
-  });
-  gulp.start("lint");
-  gulp.start("uglify");
-  gulp.start("templates");
-  gulp.start("sass");
-  gulp.start("vendor-css");
-  gulp.start("autopolyfiller");
-});
-
-gulp.task("dist:holos",function() {
-  run("cp ./holos/holos-init.js ./build/js/stamen/holos-init.js", {}).exec(function () {
-    run("mkdir ./data", {}).exec(function () {
-      run("cp ./holos/holos-handlebars.json ./data/holos-handlebars.json", {}).exec(function () {
-        gulp.start("set-env");
-        gulp.start("lint");
-        gulp.start("uglify");
-        gulp.start("templates:holos");
-        gulp.start("sass");
-        gulp.start("vendor-css");
-        gulp.start("autopolyfiller");
-      });
-    });
-  });
-});
-
-gulp.task("cleanup:holos",function(cb) {
-
-  del([
-    "./data/holos-handlebars.json"
-  ], cb);
-
 });
 
 gulp.task("cleanup",function(cb) {
@@ -150,6 +112,26 @@ gulp.task("uglify", function() {
     .pipe(gulp.dest(paths.publicJs));
 });
 
+gulp.task("js:holos", function() {
+  gulp
+    .src(mainBowerFiles("./holos/*.js").concat([paths.js, paths.viewJs]))
+    .pipe(sourcemaps.init())
+    .pipe(concat('holos-init.js'))
+    .pipe(gulp.dest(paths.publicJs))
+    .pipe(uglify({
+      mangle: true,
+      output: {
+        beautify: false
+      }
+    }).on("error", function(e) {
+      console.log("Uglify error:\x07",e.message, " on line: ", e.lineNumber);
+      return this.end();
+    }))
+    .pipe(rename({extname: ".min.js"}))
+    .pipe(sourcemaps.write("./")) // Write a sourcemap for browser debugging
+    .pipe(gulp.dest(paths.publicJs));
+});
+
 gulp.task('autopolyfiller', function () {
   return gulp.src(paths.publicJs + "/*.js")
       .pipe(autopolyfiller('polyfill.js'))
@@ -186,7 +168,7 @@ gulp.task("templates:holos", function() {
         "./helpers/*.js"
       ],
       partials: [
-        "./templates/partials/*.handlebars"
+        "./templates/partials-holos/*.handlebars"
       ]
     }))
     .pipe(rename({extname: ".html"}))
