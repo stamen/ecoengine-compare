@@ -32,6 +32,9 @@ This ...
 
 Open [http://localhost:8000/](http://localhost:8000/)
 
+## URL Shortening
+For the URL shortener to work, you will need to get a key for the [Google URL Shortener API](https://developers.google.com/url-shortener/v1/getting_started). The key must be in the .env.json file in the repo root as `google-key`
+
 ## Adding vendor JS libraries
 ```bash
 bower install [bower package name]
