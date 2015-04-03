@@ -94,7 +94,7 @@ gulp.task("lint", function() {
 
 gulp.task("uglify", function() {
   gulp
-    .src(mainBowerFiles({filter: new RegExp('.js$', 'i')}).concat([paths.js, paths.viewJs]))
+    .src(mainBowerFiles({filter: new RegExp('.js$', 'i')}).concat([paths.viewJs,paths.js]))
     .pipe(sourcemaps.init())
     .pipe(concat('ecoengine-compare.js'))
     .pipe(gulp.dest(paths.publicJs))
@@ -157,7 +157,7 @@ gulp.task("templates:holos", function() {
 
 //
 // Serve contents of the public directory
-// locally on port :8080
+// locally on port :5000
 //
 gulp.task("webserver", function() {
   gulp
@@ -197,7 +197,7 @@ gulp.task("watch", function() {
   gulp.watch(mainBowerFiles({filter: new RegExp('.js$', 'i')}).concat([paths.js, paths.viewJs]),["lint", "uglify", "autopolyfiller"]);
   console.log("watching directory:", paths.js);
 
-  gulp.watch(paths.templates, ["set-env","templates"]);
+  gulp.watch(paths.templates, ["set-env","templates", "templates:holos"]);
   console.log("watching directory:", paths.templates);
 
   gulp.watch(mainBowerFiles({filter: new RegExp('.css$', 'i')}).concat(["sass/*.scss"]), ["sass"]);
