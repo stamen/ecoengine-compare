@@ -17,6 +17,7 @@ var copy           = require("gulp-copy"),
     mainBowerFiles = require('main-bower-files'),
     wrap           = require("gulp-wrap"),
     autopolyfiller = require("gulp-autopolyfiller"),
+    sass           = require("gulp-sass"),
     del            = require("del");
 
 // Gulp mix-ins
@@ -197,10 +198,10 @@ gulp.task("webserver", function() {
 // to the public directory
 //
 //
-gulp.task("sass", function () {
-  fs.readdirSync("./sass").forEach(function() {
-    run("sass --update sass/:./build/css", {}).exec();
-  });
+gulp.task('sass', function () {
+  return gulp.src("./sass/**")
+      .pipe(sass())
+      .pipe(gulp.dest("./build/css/"));
 });
 
 gulp.task("vendor-css", function() {
