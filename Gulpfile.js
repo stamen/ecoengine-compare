@@ -29,7 +29,7 @@ var paths = {
   templates: "./templates/*.handlebars",
   js: "./js/*.js",
   viewJs: "./viewJs/*.js",
-  publicJs: "./build/js/stamen"
+  publicJs: "./build/js"
 };
 
 //
@@ -40,7 +40,6 @@ gulp.task("default",function() {
   gulp.start("set-env");
   gulp.start("lint");
   gulp.start("uglify");
-  gulp.start("js:holos");
   gulp.start("templates");
   gulp.start("templates:holos");
   gulp.start("sass");
@@ -113,26 +112,6 @@ gulp.task("uglify", function() {
     .pipe(gulp.dest(paths.publicJs));
 });
 
-gulp.task("js:holos", function() {
-  gulp
-    .src("./holos/*.js")
-    .pipe(sourcemaps.init())
-    .pipe(concat('holos-init.js'))
-    .pipe(gulp.dest(paths.publicJs))
-    .pipe(uglify({
-      mangle: true,
-      output: {
-        beautify: false
-      }
-    }).on("error", function(e) {
-      console.log("Uglify error:\x07",e.message, " on line: ", e.lineNumber);
-      return this.end();
-    }))
-    .pipe(rename({extname: ".min.js"}))
-    .pipe(sourcemaps.write("./")) // Write a sourcemap for browser debugging
-    .pipe(gulp.dest(paths.publicJs));
-});
-
 gulp.task('autopolyfiller', function () {
   return gulp.src(paths.publicJs + "/*.js")
       .pipe(autopolyfiller('polyfill.js'))
@@ -172,8 +151,8 @@ gulp.task("templates:holos", function() {
         "./templates/partials/*.handlebars"
       ]
     }))
-    .pipe(rename({extname: ".html"}))
-    .pipe(gulp.dest("./build/templates/"));
+    .pipe(rename({extname: ".ninja2.html"}))
+    .pipe(gulp.dest("./build/"));
 });
 
 //
