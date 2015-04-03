@@ -94,7 +94,7 @@ gulp.task("lint", function() {
 
 gulp.task("uglify", function() {
   gulp
-    .src(mainBowerFiles("**/*.js").concat([paths.js, paths.viewJs]))
+    .src(mainBowerFiles({filter: new RegExp('.js$', 'i')}).concat([paths.js, paths.viewJs]))
     .pipe(sourcemaps.init())
     .pipe(concat('ecoengine-compare.js'))
     .pipe(gulp.dest(paths.publicJs))
@@ -205,7 +205,7 @@ gulp.task("sass", function () {
 
 gulp.task("vendor-css", function() {
   gulp
-  .src(mainBowerFiles("**/*.css"))
+  .src(mainBowerFiles({filter: new RegExp('.css$', 'i')}))
   .pipe(concat("vendor.css"))
   .pipe(gulp.dest(paths.css));
 });
@@ -214,13 +214,13 @@ gulp.task("vendor-css", function() {
 // Watch directories for changes
 //
 gulp.task("watch", function() {
-  gulp.watch(mainBowerFiles("**/*.js").concat([paths.js, paths.viewJs]),["lint", "uglify", "autopolyfiller"]);
+  gulp.watch(mainBowerFiles({filter: new RegExp('.js$', 'i')}).concat([paths.js, paths.viewJs]),["lint", "uglify", "autopolyfiller"]);
   console.log("watching directory:", paths.js);
 
   gulp.watch(paths.templates, ["set-env","templates"]);
   console.log("watching directory:", paths.templates);
 
-  gulp.watch(mainBowerFiles("**/.css").concat(["sass/*.scss"]), ["sass"]);
+  gulp.watch(mainBowerFiles({filter: new RegExp('.css$', 'i')}).concat(["sass/*.scss"]), ["sass"]);
   console.log("watching directory:", paths.sass);
 
   gulp.start("webserver");
