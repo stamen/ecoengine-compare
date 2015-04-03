@@ -1,3 +1,4 @@
 [submodule "build"]
 	path = build
 	url = git@github.com:stamen/ecoengine-compare.git
+	branch = build
