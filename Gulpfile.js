@@ -94,7 +94,7 @@ gulp.task("lint", function() {
 
 gulp.task("uglify", function() {
   gulp
-    .src(mainBowerFiles({filter: new RegExp('.js$', 'i')}).concat([paths.viewJs,paths.js]))
+    .src(mainBowerFiles({filter: new RegExp('.js$', 'i')}).concat([paths.js,paths.viewJs]))
     .pipe(sourcemaps.init())
     .pipe(concat('ecoengine-compare.js'))
     .pipe(gulp.dest(paths.publicJs))
