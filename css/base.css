@@ -131,7 +131,42 @@
       -o-transform: scale(0.6);
       transform: scale(0.6);
       position: absolute;
-      right: 5px; }
+      right: 5px;
+      @-moz-keyframes f_fadeG {
+        0% {
+          background-color: #67ACEC; }
+
+        100% {
+          background-color: #eee; } }
+
+      @-webkit-keyframes f_fadeG {
+        0% {
+          background-color: #67ACEC; }
+
+        100% {
+          background-color: #eee; } }
+
+      @-ms-keyframes f_fadeG {
+        0% {
+          background-color: #67ACEC; }
+
+        100% {
+          background-color: #eee; } }
+
+      @-o-keyframes f_fadeG {
+        0% {
+          background-color: #67ACEC; }
+
+        100% {
+          background-color: #eee; } }
+
+      @keyframes f_fadeG {
+        0% {
+          background-color: #67ACEC; }
+
+        100% {
+          background-color: #eee; } }
+ }
       .ecoengine-compare #legend-layer-menu .loading .f_circleG {
         cursor: pointer;
         position: absolute;
@@ -227,31 +262,6 @@
         -ms-animation-delay: 1.3s;
         -o-animation-delay: 1.3s;
         animation-delay: 1.3s; }
-@-moz-keyframes f_fadeG {
-  0% {
-    background-color: #67ACEC; }
-  100% {
-    background-color: #eee; } }
-@-webkit-keyframes f_fadeG {
-  0% {
-    background-color: #67ACEC; }
-  100% {
-    background-color: #eee; } }
-@-ms-keyframes f_fadeG {
-  0% {
-    background-color: #67ACEC; }
-  100% {
-    background-color: #eee; } }
-@-o-keyframes f_fadeG {
-  0% {
-    background-color: #67ACEC; }
-  100% {
-    background-color: #eee; } }
-@keyframes f_fadeG {
-  0% {
-    background-color: #67ACEC; }
-  100% {
-    background-color: #eee; } }
   .ecoengine-compare .leaflet-bar {
     box-shadow: none;
     border-radius: 0;
@@ -289,5 +299,3 @@
   .ecoengine-compare .input-form input {
     width: 98%;
     margin-bottom: 5px; }
-
-/*# sourceMappingURL=base.css.map */

@@ -31161,7 +31161,7 @@ function IndexController() {
 
         var xmlhttp = new XMLHttpRequest();
 
-        xmlhttp.open("POST","https://www.googleapis.com/urlshortener/v1/url",true);
+        xmlhttp.open("POST", "https://www.googleapis.com/urlshortener/v1/url?key=" + STMN.googleKey, true);
         xmlhttp.setRequestHeader("Content-type","application/json");
 
         xmlhttp.onreadystatechange = function() {
