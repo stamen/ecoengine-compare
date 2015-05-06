@@ -225,7 +225,7 @@ function IndexController() {
 
     that.layerMenu.on("color-change", function(e) {
 
-      layerObjectCache[layerObject.id] = e.caller;
+      layerObjectCache[e.caller.id] = e.caller;
 
       //
       // Color change handler for point and hexagon layers
