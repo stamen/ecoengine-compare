@@ -151,7 +151,7 @@ gulp.task("templates:holos", function() {
         "./templates/partials/*.handlebars"
       ]
     }))
-    .pipe(rename({extname: ".ninja2.html"}))
+    .pipe(rename({extname: ".jinja2.html"}))
     .pipe(gulp.dest("./build/"));
 });
 
