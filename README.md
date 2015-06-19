@@ -47,7 +47,7 @@ _All bower components are bundled into the minified JS for the site. Any require
    * All js is included in the footer.
 
 ## Holos integration
-A django/ninja2 compatible template has been added to the root of the build directory. This can be used as a ninja2 include to bring in the markup needed to run this application without the header and footer. The following files need to be linked in the main document:
+A django/jinja2 compatible template has been added to the root of the build directory. This can be used as a jinja2 include to bring in the markup needed to run this application without the header and footer. The following files need to be linked in the main document:
 
    * css/vendor.css (in the document head)
    * css/base.css (in the document head)
