@@ -570,7 +570,7 @@ function IndexController() {
     if (shareButtonElement) {
 
       shareButtonElement.addEventListener("click", function() {
-console.log('hi')
+alert('hi')
         var xmlhttp = new XMLHttpRequest();
 
         xmlhttp.open("POST", "https://www.googleapis.com/urlshortener/v1/url?key=" + STMN.googleKey, true);
