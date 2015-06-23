@@ -568,9 +568,9 @@ function IndexController() {
     shareButtonElement = layerMenu.rootNode.querySelector(".ecoengine-compare .share-button");
 
     if (shareButtonElement) {
-
+console.log('hi')
       shareButtonElement.addEventListener("click", function() {
-alert('hi')
+
         var xmlhttp = new XMLHttpRequest();
 
         xmlhttp.open("POST", "https://www.googleapis.com/urlshortener/v1/url?key=" + STMN.googleKey, true);
@@ -584,7 +584,7 @@ alert('hi')
 				//xmlHttp.send(jsonStr);
 
         xmlhttp.onreadystatechange = function() {
-console.log(xmlhttp.responseText)
+
           if (xmlhttp.readyState==4 && xmlhttp.status==200) {
 
             swal({
