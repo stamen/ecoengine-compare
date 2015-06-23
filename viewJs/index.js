@@ -576,13 +576,6 @@ function IndexController() {
         xmlhttp.open("POST", "https://www.googleapis.com/urlshortener/v1/url?key=" + STMN.googleKey, true);
         xmlhttp.setRequestHeader("Content-type","application/json");
 
-				//var req = new Object();
-				//req.longUrl = window.location.href;
-
-				//var jsonStr = JSON.stringify(req);
-
-				//xmlHttp.send(jsonStr);
-
         xmlhttp.onreadystatechange = function() {
 
           if (xmlhttp.readyState==4 && xmlhttp.status==200) {
@@ -695,9 +688,7 @@ function IndexController() {
     initStatefulQuerystring();
     initLayerMenu();
     initMap();
-console.log(1);
     initShareButton();
-console.log(2);
   }
 
   //
