@@ -566,9 +566,9 @@ function IndexController() {
   function initShareButton() {
 
     shareButtonElement = layerMenu.rootNode.querySelector(".ecoengine-compare .share-button");
-console.log('hi')
+
     if (shareButtonElement) {
-console.log('hi')
+
       shareButtonElement.addEventListener("click", function() {
 
         var xmlhttp = new XMLHttpRequest();
@@ -695,7 +695,9 @@ console.log('hi')
     initStatefulQuerystring();
     initLayerMenu();
     initMap();
+console.log(1);
     initShareButton();
+console.log(2);
   }
 
   //
