@@ -566,7 +566,7 @@ function IndexController() {
   function initShareButton() {
 
     shareButtonElement = layerMenu.rootNode.querySelector(".ecoengine-compare .share-button");
-
+console.log('hi')
     if (shareButtonElement) {
 console.log('hi')
       shareButtonElement.addEventListener("click", function() {
