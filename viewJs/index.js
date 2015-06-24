@@ -606,7 +606,7 @@ function IndexController() {
           }
         };
 
-        xmlhttp.send("{\"longUrl\": \"" + location.href + "\"}");
+        xmlhttp.send("{\"longUrl\": \"" + window.location.href + "\"}");
 
       }, false);
 
