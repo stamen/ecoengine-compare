@@ -578,6 +578,8 @@ function IndexController() {
 
         xmlhttp.onreadystatechange = function() {
 
+					setTimeout('', 1500);
+
           if (xmlhttp.readyState==4 && xmlhttp.status==200) {
 
             swal({
@@ -607,7 +609,6 @@ function IndexController() {
         };
 
         xmlhttp.send("{\"longUrl\": \"" + window.location.href + "\"}");
-				setTimeout('', 1500);
 
       }, false);
 
