@@ -17,7 +17,7 @@ function IndexController() {
                   opacity: 1,
                   colorRange: [layer.color, layer.color]
               }).addTo(that.map);
-          hex.data(pages.filter(function(p){return (typeof p.geometry === "object" && p.geometry !== null)}).map(function(p) {return p.geometry.coordinates;}));
+          hex.data(pages.filter(function(p){return (typeof p.geometry === "object" && "coordinates" in p.geometry)}).map(function(p) {return p.geometry.coordinates;}));
 
           var hexGroup = L.featureGroup([hex]).addTo(that.map);
 
@@ -35,7 +35,7 @@ function IndexController() {
           dots;
 
           features.forEach(function(feature) {
-            if (feature.geometry) {
+            if ("coordinates" in feature.geometry) {
               group.addLayer(L.circleMarker([
                 feature.geometry.coordinates[1],
                 feature.geometry.coordinates[0]
@@ -77,7 +77,7 @@ function IndexController() {
             w.document.body.innerHTML = "<pre>" + d3.csv.format(combine(d)) + "</pre>";
           });
 
-          hex.data(pages.filter(function(p){return (typeof p.geometry === "object" && p.geometry !== null)}).map(function(p) {
+          hex.data(pages.filter(function(p){return (typeof p.geometry === "object" && "coordinates" in p.geometry)}).map(function(p) {
             p[0] = p.geometry.coordinates[0];
             p[1] = p.geometry.coordinates[1];
             return p;
