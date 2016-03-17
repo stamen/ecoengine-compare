@@ -27,7 +27,6 @@
     "query-string": "~1.0.0",
     "lz-string-bower": "~1.3.3",
     "leaflet-hash": "*",
-    "sweetalert": "~0.4.2",
-    "legend-layer-menu": "git://github.com/stamen/legend-layer-menu#ecoengine"
+    "sweetalert": "~0.4.2"
   }
 }

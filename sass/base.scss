@@ -417,3 +417,185 @@
   }
 
 }
+
+.legend-layer-menu {
+  position:absolute;
+  top:10px;
+  right:10px;
+  border:solid 1px #aaa;
+  width: 270px;
+  padding:10px;
+  background-color:#fff;
+  box-sizing:border-box;
+
+  h2 {
+    position:relative;
+    font-size: 125%;
+    font-weight: normal;
+
+    .input-form {
+
+      button {
+        margin-right:5px;
+      }
+
+      &.hidden {
+        display:none;
+      }
+    }
+  }
+
+  select {
+    width: 100%;
+  }
+
+  .content-container {
+    position:relative;
+
+    button {
+      border:solid 1px #aaa;
+      background-color:white;
+      padding:3px 5px;
+    }
+
+    button:hover {
+      background-color:rgb(0,180,228);
+      color:white;
+      cursor:pointer;
+    }
+  }
+
+  .dropzone {
+    border: dashed 1px transparent;
+    padding: 10px;
+    transition: background-color 0.3s, border-color 0.3s;
+    min-height:25px;
+    z-index:1;
+  }
+
+  .drop-active {
+    border-color: #333;
+  }
+
+  .drop-target {
+    background-color: rgb(0,180,228);
+  }
+
+  .drag-drop {
+    display:inline-block;
+    min-width: 40px;
+    padding: 3px;
+    padding-left: 25px;
+    box-sizing:border-box;
+
+    border: solid 1px #eee;
+
+    background-color:#fff;
+
+    -webkit-transform: translate(0px, 0px);
+    transform: translate(0px, 0px);
+
+    transition: background-color 0.3s;
+
+    width:220px;
+
+    z-index:10;
+
+    &:hover {
+      cursor:normal;
+    }
+
+    &.dragging {
+      box-shadow:1px 1px 1px rgba(0,0,0,.9);
+    }
+
+    .grab {
+      width:20px;
+      display:inline-block;
+      float: left;
+      cursor:move;
+      margin: 5px;
+    }
+
+    .label {
+      margin-left: 5px;
+      font-size: 75%;
+    }
+
+    .delete-icon {
+      width: 7px;
+      position:absolute;
+      right:10px;
+      top: 11px;
+      cursor:pointer;
+    }
+
+    .edit-icon {
+      font-size: 75%;
+      position: absolute;
+      right: 13px;
+      top: 6px;
+      display:none;
+    }
+
+    .drag-icon {
+      fill: #aaa;
+      width: 21px;
+      height: 13px;
+      position: absolute;
+      left: 6px;
+      top: 8px;
+    }
+
+    .color-picker {
+      padding: 0;
+      border: 0;
+      background-color: white;
+      width: 20px;
+      height: 20px;
+      margin-left: 5px;
+    }
+  }
+
+  .color-picker-panel {
+    background-color:#fff;
+    display: none;
+    position: absolute;
+    top: 106px;
+    left: 23px;
+    width:220px;
+    padding:5px;
+    border: solid 1px #aaa;
+    box-shadow:1px 1px 1px rgba(0,0,0,.5);
+
+    .color {
+      width:20px;
+      height:20px;
+      float:left;
+      cursor:pointer;
+    }
+  }
+
+  .draggable {
+    .error {
+      color: #00b4e4;
+      font-size: 75%;
+      border: solid 1px #00b4e4;
+      padding: 2px 5px;
+      margin-left: 7px;
+      line-height: 1.4em;
+      display:none;
+      margin-right: 6px;
+      margin-bottom: 5px;
+      margin-top: 1px;
+    }
+  }
+
+  /* a fix for layering in FireFox: https://github.com/stamen/ecoengine/issues/133 */
+  &.prompting {
+    .draggable {
+      z-index:0;
+    }
+  }
+
+}
