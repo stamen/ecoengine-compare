@@ -498,6 +498,7 @@
     transition: background-color 0.3s;
 
     width:220px;
+    line-height: 13px;
 
     z-index:10;
 
@@ -520,6 +521,8 @@
     .label {
       margin-left: 5px;
       font-size: 75%;
+      width: 100%;
+      word-wrap: break-word;
     }
 
     .delete-icon {
