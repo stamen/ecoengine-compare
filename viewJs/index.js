@@ -38,7 +38,7 @@
         ].join(""),
         editIcon        = "<span class=\"edit-icon\">[edit]</span>",
         layerTemplate       = "<li class=\"draggable drag-drop layer-item-{id}\" data-id=\"{id}\" data-color=\"{color}\" data-list=\"{list}\" data-label=\"{label}\" data-uri=\"{uri}\"> " + sortIcon + "<input type=\"color\" class=\"color-picker\" value=\"{color}\"><span class=\"label\">{label}</span> " + deleteIcon + editIcon + " <div class=\"error\"></div></li>",
-        inputFormTemplate   = "<div class=\"input-form hidden\"><form class=\"input-form-element\" name=\"{layerid}-input-form\"><input type=\"text\" name=\"uri\" placeholder=\"GeoJSON API URI or Keyword\"><input type=\"text\" name=\"label\" placeholder=\"A name for this layer\"><input type=\"hidden\" name=\"id\"><button class=\"save\">Save</button><button class=\"close\">Close</button></form></div>",
+        inputFormTemplate   = "<div class=\"input-form hidden\"><form class=\"input-form-element\" name=\"{layerid}-input-form\"><input type=\"text\" name=\"uri\" placeholder=\"e.g., 'Puma concolor' or API URL\"><input type=\"text\" name=\"label\" placeholder=\"A name for this layer\"><input type=\"hidden\" name=\"id\"><button class=\"save\">Save</button><button class=\"close\">Close</button></form></div>",
         colorPickerTemplate = "<div class=\"color-picker-panel\" style=\"display:none;position:absolute;\">" + colors.map(function(c) {return "<div class=\"color\" style=\"background-color:"+c+";\"></div>"}).join("") + "</div>",
         i, dragConfig, oldParent, dropConfig, orderCache, inputFormNode;
 
