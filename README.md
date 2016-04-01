@@ -2,8 +2,6 @@
 
 Find the live version of Compare [here](https://holos.berkeley.edu/compare/).
 
-For issues with this repository, please file over at [http://github.com/stamen/ecoengine/issues](http://github.com/stamen/ecoengine/issues)
-
 ## Setup
 
 ```bash
