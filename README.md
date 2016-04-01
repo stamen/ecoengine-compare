@@ -1,4 +1,6 @@
-# Berkeley Eco Engine compare demo
+# Berkeley Eco Engine Compare
+
+Find the live version of Compare [here](https://holos.berkeley.edu/compare/).
 
 For issues with this repository, please file over at [http://github.com/stamen/ecoengine/issues](http://github.com/stamen/ecoengine/issues)
 
@@ -10,25 +12,11 @@ npm install
 cp .env.json.sample .env.json
 ```
 
-## Deploy
-
-```bash
-gulp
-scp -prq ./build/. studio.stamen.com:www/berkeley/show/compare/
-scp -prq ./build/. studio.stamen.com:www/berkeley/show/compare-[year]-[month]-[day]/
-```
-
-Open [http://studio.stamen.com/berkeley/show/compare/](http://studio.stamen.com/berkeley/show/compare/)
-
-This ...
-
 ## Develop
 
 ```bash
 npm start
 ```
-
-This ...
 
 Open [http://localhost:8000/](http://localhost:8000/)
 
